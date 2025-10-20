@@ -66,7 +66,10 @@ struct HomeView: View {
                 if !routines.isEmpty {
                     Section(NSLocalizedString("home.routine.select.section", comment: "Select routine section")) {
                         ForEach(routines) { routine in
-                            Button(routine.name) { selectedRoutine = routine }
+                            Button(routine.name) { 
+                                selectedRoutine = routine
+                                updateWidgetSnapshot()
+                            }
                         }
                     }
                 }
@@ -125,7 +128,10 @@ struct HomeView: View {
                                     lineWidth: isToday ? 2 : 1
                                 )
                         )
-                        .onTapGesture { selectedWeekday = day }
+                        .onTapGesture { 
+                            selectedWeekday = day
+                            updateWidgetSnapshot()
+                        }
                     
                     // Always reserve space for category indicators
                     HStack(spacing: 2) {
@@ -358,6 +364,9 @@ struct HomeView: View {
         entry.routine = routine
         routine.entries.append(entry)
         routine.updatedAt = .now
+        
+        // Update widget
+        updateWidgetSnapshot()
     }
 
     private func deleteEntry(_ entry: RoutineEntry) {
@@ -367,26 +376,48 @@ struct HomeView: View {
         }
         context.delete(entry)
         routine.updatedAt = .now
+        
+        // Update widget
+        updateWidgetSnapshot()
     }
 
     private func createRoutine() {
         let routine = Routine(name: NSLocalizedString("home.routine.new.default", comment: "New Routine"))
         context.insert(routine)
         selectedRoutine = routine
+        
+        // Update widget
+        updateWidgetSnapshot()
     }
 
     private func deleteSelectedRoutine() {
         guard let routine = selectedRoutine else { return }
         selectedRoutine = nil
         context.delete(routine)
+        
+        // Update widget
+        updateWidgetSnapshot()
     }
 
     private func selectDefaultRoutineIfNeeded() {
         if selectedRoutine == nil { selectedRoutine = routines.first }
+        // Update widget when routine is selected
+        updateWidgetSnapshot()
     }
 
     private func weekdayTitle(_ day: Weekday) -> String {
         return day.fullName
+    }
+    
+    private func updateWidgetSnapshot() {
+        guard let routine = selectedRoutine else { return }
+        let dayEntries = entriesForSelectedDay()
+        let snapshot = WidgetSync.buildSnapshot(
+            routineName: routine.name,
+            weekday: selectedWeekday,
+            entries: dayEntries
+        )
+        WidgetSync.writeTodaySnapshot(snapshot: snapshot)
     }
 
     private static func todayWeekday() -> Weekday {
@@ -439,6 +470,9 @@ struct HomeView: View {
         
         // Clear pending change
         pendingWeightChange = nil
+        
+        // Update widget
+        updateWidgetSnapshot()
     }
 
     private var editRoutineNameSheet: some View {
