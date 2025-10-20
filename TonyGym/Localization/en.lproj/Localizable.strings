@@ -1,0 +1,132 @@
+/* English Localization */
+
+/* Navigation */
+"nav.today" = "Today";
+"nav.exercises" = "Exercises";
+"nav.progress" = "Progress";
+
+/* Home Screen */
+"home.routine.title" = "Routine";
+"home.routine.new" = "New routine";
+"home.routine.new.default" = "New Routine";
+"home.routine.select" = "Select Routine";
+"home.routine.select.section" = "Select routine";
+"home.routine.edit" = "Edit Routine";
+"home.routine.edit.name" = "Edit name";
+"home.routine.export" = "Export Routine";
+"home.routine.import.section" = "Import";
+"home.routine.import.json" = "Import routine from JSON";
+"home.routine.delete" = "Delete Routine";
+"home.routine.delete.confirm" = "Are you sure you want to delete this routine?";
+"home.routine.delete.confirm.message" = "This action cannot be undone.";
+
+"home.day.rest" = "Rest";
+"home.day.routine" = "%@ Routine";
+"home.day.edit.title" = "Edit Day Title";
+"home.day.title.placeholder" = "e.g. Leg Day";
+"home.day.no.exercises" = "No exercises for this day";
+
+"home.exercise.add" = "Add exercise";
+"home.exercise.weight" = "Weight";
+"home.exercise.weight.updated" = "Weight updated from Home";
+"home.exercise.weight.adjust" = "Quick adjustment from Home";
+
+"home.weekday.monday" = "Monday";
+"home.weekday.tuesday" = "Tuesday";
+"home.weekday.wednesday" = "Wednesday";
+"home.weekday.thursday" = "Thursday";
+"home.weekday.friday" = "Friday";
+"home.weekday.saturday" = "Saturday";
+"home.weekday.sunday" = "Sunday";
+
+"home.weekday.mon" = "M";
+"home.weekday.tue" = "T";
+"home.weekday.wed" = "W";
+"home.weekday.thu" = "T";
+"home.weekday.fri" = "F";
+"home.weekday.sat" = "S";
+"home.weekday.sun" = "S";
+
+/* Exercises */
+"exercise.title" = "Exercises";
+"exercise.add" = "Add Exercise";
+"exercise.edit" = "Edit Exercise";
+"exercise.delete" = "Delete Exercise";
+"exercise.delete.confirm" = "Delete exercise?";
+"exercise.delete.confirm.message" = "This action cannot be undone.";
+"exercise.detail.title" = "Detail";
+"exercise.select.title" = "Select exercise";
+
+"exercise.name" = "Name";
+"exercise.name.placeholder" = "Exercise name";
+"exercise.description" = "Description";
+"exercise.description.placeholder" = "Exercise description";
+"exercise.weight" = "Weight (kg)";
+"exercise.category" = "Category";
+"exercise.images" = "Images";
+"exercise.information" = "Information";
+
+"exercise.category.pierna" = "Legs";
+"exercise.category.pecho" = "Chest";
+"exercise.category.espalda" = "Back";
+"exercise.category.hombro" = "Shoulders";
+"exercise.category.brazos" = "Arms";
+"exercise.category.core" = "Core";
+"exercise.category.otros" = "Other";
+
+"exercise.filter.all" = "All";
+"exercise.filter.pierna" = "Legs";
+"exercise.filter.pecho" = "Chest";
+"exercise.filter.espalda" = "Back";
+"exercise.filter.hombro" = "Shoulders";
+"exercise.filter.brazos" = "Arms";
+"exercise.filter.core" = "Core";
+"exercise.filter.otros" = "Other";
+
+/* Statistics */
+"stats.title" = "Progress";
+"stats.subtitle" = "See the evolution of each exercise";
+"stats.select.exercise" = "Select an Exercise";
+"stats.filter.category" = "Filter by Category";
+"stats.no.data" = "No progression data";
+"stats.no.data.message" = "Start training this exercise to see your evolution";
+"stats.recent.workouts" = "Recent Workouts";
+"stats.delete.workout" = "Delete";
+"stats.delete.workout.confirm" = "Are you sure you want to delete this weight record?";
+
+/* Weight Editor */
+"weight.editor.title" = "Edit Weight";
+"weight.editor.weight" = "Weight (kg)";
+"weight.editor.current" = "Current weight";
+"weight.editor.new" = "New weight";
+"weight.editor.save" = "Save";
+"weight.editor.cancel" = "Cancel";
+
+/* Workout Log */
+"workout.log.title" = "Log Workout";
+"workout.log.exercise" = "Exercise";
+"workout.log.sets" = "Sets";
+"workout.log.reps" = "Reps";
+"workout.log.weight" = "Weight (kg)";
+"workout.log.notes" = "Notes";
+"workout.log.notes.placeholder" = "Workout notes";
+"workout.log.summary" = "Summary";
+"workout.log.total.weight" = "Total weight lifted";
+"workout.log.save" = "Save";
+"workout.log.cancel" = "Cancel";
+
+/* Common */
+"common.save" = "Save";
+"common.cancel" = "Cancel";
+"common.delete" = "Delete";
+"common.edit" = "Edit";
+"common.add" = "Add";
+"common.close" = "Close";
+"common.ok" = "OK";
+"common.yes" = "Yes";
+"common.no" = "No";
+
+/* Units */
+"unit.kg" = "kg";
+"unit.sets" = "sets";
+"unit.reps" = "reps";

@@ -27,12 +27,12 @@ struct StatisticsView: View {
             }
             .padding()
         }
-        .navigationTitle("Progreso")
+        .navigationTitle(NSLocalizedString("stats.title", comment: "Progress tab title"))
     }
     
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Ve la evolución de cada ejercicio")
+            Text(NSLocalizedString("stats.subtitle", comment: "Progress subtitle"))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
@@ -41,7 +41,7 @@ struct StatisticsView: View {
     
     private var categoryFilterSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Filtrar por Categoría")
+            Text(NSLocalizedString("stats.filter.category", comment: "Filter by category"))
                 .font(.headline)
                 .bold()
             
@@ -49,7 +49,7 @@ struct StatisticsView: View {
                 HStack(spacing: 12) {
                     // All categories button
                     filterChip(
-                        label: "Todos",
+                        label: NSLocalizedString("exercise.filter.all", comment: "All filter"),
                         category: .otros, // Use a neutral color
                         isSelected: selectedCategory == nil
                     ) {
@@ -78,7 +78,7 @@ struct StatisticsView: View {
     
     private var exerciseSelector: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Selecciona un Ejercicio")
+            Text(NSLocalizedString("stats.select.exercise", comment: "Select an exercise"))
                 .font(.headline)
                 .bold()
             
@@ -148,10 +148,10 @@ struct StatisticsView: View {
                     Image(systemName: "chart.line.uptrend.xyaxis")
                         .font(.system(size: 32))
                         .foregroundStyle(.secondary)
-                    Text("No hay datos de progresión")
+                    Text(NSLocalizedString("stats.no.data", comment: "No progression data"))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
-                    Text("Comienza a entrenar este ejercicio para ver tu evolución")
+                    Text(NSLocalizedString("stats.no.data.message", comment: "Start training message"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -223,10 +223,10 @@ struct StatisticsView: View {
                     Image(systemName: "chart.line.uptrend.xyaxis")
                         .font(.system(size: 32))
                         .foregroundStyle(.secondary)
-                    Text("No hay datos de progresión")
+                    Text(NSLocalizedString("stats.no.data", comment: "No progression data"))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
-                    Text("Comienza a entrenar este ejercicio para ver tu evolución")
+                    Text(NSLocalizedString("stats.no.data.message", comment: "Start training message"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -246,7 +246,7 @@ struct StatisticsView: View {
                                     VStack(spacing: 4) {
                                         Image(systemName: "trash.fill")
                                             .font(.system(.title3, weight: .semibold))
-                                        Text("Eliminar")
+                                        Text(NSLocalizedString("stats.delete.workout", comment: "Delete workout"))
                                             .font(.system(.caption2, weight: .medium))
                                     }
                                 }

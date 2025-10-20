@@ -7,13 +7,25 @@ enum Weekday: Int, Codable, CaseIterable, Identifiable {
     var id: Int { rawValue }
     var short: String {
         switch self {
-        case .monday: return "L"
-        case .tuesday: return "M"
-        case .wednesday: return "X"
-        case .thursday: return "J"
-        case .friday: return "V"
-        case .saturday: return "S"
-        case .sunday: return "D"
+        case .monday: return NSLocalizedString("home.weekday.mon", comment: "Monday short")
+        case .tuesday: return NSLocalizedString("home.weekday.tue", comment: "Tuesday short")
+        case .wednesday: return NSLocalizedString("home.weekday.wed", comment: "Wednesday short")
+        case .thursday: return NSLocalizedString("home.weekday.thu", comment: "Thursday short")
+        case .friday: return NSLocalizedString("home.weekday.fri", comment: "Friday short")
+        case .saturday: return NSLocalizedString("home.weekday.sat", comment: "Saturday short")
+        case .sunday: return NSLocalizedString("home.weekday.sun", comment: "Sunday short")
+        }
+    }
+    
+    var fullName: String {
+        switch self {
+        case .monday: return NSLocalizedString("home.weekday.monday", comment: "Monday full name")
+        case .tuesday: return NSLocalizedString("home.weekday.tuesday", comment: "Tuesday full name")
+        case .wednesday: return NSLocalizedString("home.weekday.wednesday", comment: "Wednesday full name")
+        case .thursday: return NSLocalizedString("home.weekday.thursday", comment: "Thursday full name")
+        case .friday: return NSLocalizedString("home.weekday.friday", comment: "Friday full name")
+        case .saturday: return NSLocalizedString("home.weekday.saturday", comment: "Saturday full name")
+        case .sunday: return NSLocalizedString("home.weekday.sunday", comment: "Sunday full name")
         }
     }
 }

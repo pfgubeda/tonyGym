@@ -38,7 +38,7 @@ struct HomeView: View {
                 Spacer(minLength: 0)
             }
             .padding()
-            .navigationTitle("")
+            .navigationTitle(NSLocalizedString("nav.today", comment: "Today tab title"))
             .onAppear(perform: selectDefaultRoutineIfNeeded)
             .fileImporter(isPresented: $showingImport, allowedContentTypes: [UTType.json]) { result in
                 handleImport(result: result)
@@ -58,12 +58,12 @@ struct HomeView: View {
     private var header: some View {
         HStack(spacing: 8) {
             Menu {
-                Button("Nueva rutina") { createRoutine() }
-                Section("Importar") {
-                    Button("Importar rutina desde JSON") { showingImport = true }
+                Button(NSLocalizedString("home.routine.new", comment: "New routine")) { createRoutine() }
+                Section(NSLocalizedString("home.routine.import.section", comment: "Import section")) {
+                    Button(NSLocalizedString("home.routine.import.json", comment: "Import routine from JSON")) { showingImport = true }
                 }
                 if !routines.isEmpty {
-                    Section("Seleccionar rutina") {
+                    Section(NSLocalizedString("home.routine.select.section", comment: "Select routine section")) {
                         ForEach(routines) { routine in
                             Button(routine.name) { selectedRoutine = routine }
                         }
@@ -71,7 +71,7 @@ struct HomeView: View {
                 }
             } label: {
                 HStack {
-                    Text(selectedRoutine?.name ?? "Selecciona rutina")
+                    Text(selectedRoutine?.name ?? NSLocalizedString("home.routine.select", comment: "Select routine"))
                         .font(.title2).bold()
                     Image(systemName: "chevron.down")
                 }
@@ -81,13 +81,13 @@ struct HomeView: View {
             Spacer()
 
             Menu {
-                Button("Editar nombre") {
+                Button(NSLocalizedString("home.routine.edit.name", comment: "Edit name")) {
                     routineNameDraft = selectedRoutine?.name ?? ""
                     showingEditRoutineName = true
                 }
-                Button("Exportar rutina") { showingExport = true }
+                Button(NSLocalizedString("home.routine.export", comment: "Export routine")) { showingExport = true }
                 Button(role: .destructive, action: deleteSelectedRoutine) {
-                    Text("Eliminar rutina")
+                    Text(NSLocalizedString("home.routine.delete", comment: "Delete routine"))
                 }
             } label: {
                 Image(systemName: "ellipsis.circle")
@@ -177,7 +177,7 @@ struct HomeView: View {
                 Button {
                     showingExercisePicker = true
                 } label: {
-                    Label("Añadir ejercicio", systemImage: "plus")
+                    Label(NSLocalizedString("home.exercise.add", comment: "Add exercise"), systemImage: "plus")
                 }
                 .disabled(selectedRoutine == nil)
             }
@@ -187,10 +187,10 @@ struct HomeView: View {
                     Image(systemName: "bed.double.fill")
                         .font(.largeTitle)
                         .foregroundStyle(Color.orange)
-                    Text("Descanso")
+                    Text(NSLocalizedString("home.day.rest", comment: "Rest day"))
                         .font(.headline)
                         .foregroundStyle(Color.orange)
-                    Text("No hay ejercicios para este día")
+                    Text(NSLocalizedString("home.day.no.exercises", comment: "No exercises for this day"))
                         .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity)
@@ -285,13 +285,13 @@ struct HomeView: View {
         .sheet(isPresented: $editingDayTitle) {
             NavigationStack {
                 Form {
-                    TextField("Título del día", text: $dayTitleDraft)
+                    TextField(NSLocalizedString("home.day.title.placeholder", comment: "Day title placeholder"), text: $dayTitleDraft)
                 }
-                .navigationTitle("Editar título")
+                .navigationTitle(NSLocalizedString("home.day.edit.title", comment: "Edit day title"))
                 .toolbar {
-                    ToolbarItem(placement: .cancellationAction) { Button("Cancelar") { editingDayTitle = false } }
+                    ToolbarItem(placement: .cancellationAction) { Button(NSLocalizedString("common.cancel", comment: "Cancel")) { editingDayTitle = false } }
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("Guardar") {
+                        Button(NSLocalizedString("common.save", comment: "Save")) {
                             saveDayTitle(dayTitleDraft)
                             editingDayTitle = false
                         }
@@ -327,11 +327,10 @@ struct HomeView: View {
     }
 
     private func dayHeaderTitle() -> String {
-        let base = "Rutina de \(weekdayTitle(selectedWeekday))"
         if let plan = dayPlanForSelectedDay(), !plan.title.isEmpty {
             return plan.title
         }
-        return base
+        return String(format: NSLocalizedString("home.day.routine", comment: "Day routine"), weekdayTitle(selectedWeekday))
     }
 
     private func currentDayTitle() -> String {
@@ -370,7 +369,7 @@ struct HomeView: View {
     }
 
     private func createRoutine() {
-        let routine = Routine(name: "Nueva Rutina")
+        let routine = Routine(name: NSLocalizedString("home.routine.new.default", comment: "New Routine"))
         context.insert(routine)
         selectedRoutine = routine
     }
@@ -386,15 +385,7 @@ struct HomeView: View {
     }
 
     private func weekdayTitle(_ day: Weekday) -> String {
-        switch day {
-        case .monday: return "Lunes"
-        case .tuesday: return "Martes"
-        case .wednesday: return "Miércoles"
-        case .thursday: return "Jueves"
-        case .friday: return "Viernes"
-        case .saturday: return "Sábado"
-        case .sunday: return "Domingo"
-        }
+        return day.fullName
     }
 
     private static func todayWeekday() -> Weekday {
@@ -452,15 +443,15 @@ struct HomeView: View {
     private var editRoutineNameSheet: some View {
         NavigationStack {
             Form {
-                TextField("Nombre", text: $routineNameDraft)
+                TextField(NSLocalizedString("exercise.name", comment: "Exercise name"), text: $routineNameDraft)
             }
-            .navigationTitle("Editar rutina")
+                .navigationTitle(NSLocalizedString("home.routine.edit", comment: "Edit routine"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") { showingEditRoutineName = false }
+                    Button(NSLocalizedString("common.cancel", comment: "Cancel")) { showingEditRoutineName = false }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Guardar") {
+                    Button(NSLocalizedString("common.save", comment: "Save")) {
                         if let r = selectedRoutine { r.name = routineNameDraft; r.updatedAt = .now }
                         showingEditRoutineName = false
                     }
@@ -528,10 +519,10 @@ private struct ExerciseDetailSheet: View {
                 }
                 .padding()
             }
-            .navigationTitle("Detalle")
+            .navigationTitle(NSLocalizedString("exercise.detail.title", comment: "Detail"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cerrar") { dismiss() }
+                    Button(NSLocalizedString("common.close", comment: "Close")) { dismiss() }
                 }
             }
         }
@@ -568,10 +559,10 @@ private struct ExercisePickerView: View {
                 }
                 }
             }
-            .navigationTitle("Seleccionar ejercicio")
+            .navigationTitle(NSLocalizedString("exercise.select.title", comment: "Select exercise"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cerrar") { dismiss() }
+                    Button(NSLocalizedString("common.close", comment: "Close")) { dismiss() }
                 }
             }
         }
@@ -580,7 +571,7 @@ private struct ExercisePickerView: View {
     private var categoryFilterBar: some View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    filterChip(label: "Todos", isSelected: selectedFilter == nil) { selectedFilter = nil }
+                    filterChip(label: NSLocalizedString("exercise.filter.all", comment: "All filter"), isSelected: selectedFilter == nil) { selectedFilter = nil }
                     ForEach(ExerciseCategory.allCases) { cat in
                         filterChip(label: cat.displayName, category: cat, isSelected: selectedFilter == cat) { selectedFilter = cat }
                     }

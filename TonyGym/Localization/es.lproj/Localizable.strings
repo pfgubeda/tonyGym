@@ -1,0 +1,132 @@
+/* Spanish Localization */
+
+/* Navigation */
+"nav.today" = "Hoy";
+"nav.exercises" = "Ejercicios";
+"nav.progress" = "Progreso";
+
+/* Home Screen */
+"home.routine.title" = "Rutina";
+"home.routine.new" = "Nueva rutina";
+"home.routine.new.default" = "Nueva Rutina";
+"home.routine.select" = "Seleccionar Rutina";
+"home.routine.select.section" = "Seleccionar rutina";
+"home.routine.edit" = "Editar Rutina";
+"home.routine.edit.name" = "Editar nombre";
+"home.routine.export" = "Exportar Rutina";
+"home.routine.import.section" = "Importar";
+"home.routine.import.json" = "Importar rutina desde JSON";
+"home.routine.delete" = "Eliminar Rutina";
+"home.routine.delete.confirm" = "¿Estás seguro de que quieres eliminar esta rutina?";
+"home.routine.delete.confirm.message" = "Esta acción no se puede deshacer.";
+
+"home.day.rest" = "Descanso";
+"home.day.routine" = "Rutina de %@";
+"home.day.edit.title" = "Editar Título del Día";
+"home.day.title.placeholder" = "Ej: Día de Pierna";
+"home.day.no.exercises" = "No hay ejercicios para este día";
+
+"home.exercise.add" = "Añadir ejercicio";
+"home.exercise.weight" = "Peso";
+"home.exercise.weight.updated" = "Peso actualizado desde Home";
+"home.exercise.weight.adjust" = "Ajuste rápido desde Home";
+
+"home.weekday.monday" = "Lunes";
+"home.weekday.tuesday" = "Martes";
+"home.weekday.wednesday" = "Miércoles";
+"home.weekday.thursday" = "Jueves";
+"home.weekday.friday" = "Viernes";
+"home.weekday.saturday" = "Sábado";
+"home.weekday.sunday" = "Domingo";
+
+"home.weekday.mon" = "L";
+"home.weekday.tue" = "M";
+"home.weekday.wed" = "X";
+"home.weekday.thu" = "J";
+"home.weekday.fri" = "V";
+"home.weekday.sat" = "S";
+"home.weekday.sun" = "D";
+
+/* Exercises */
+"exercise.title" = "Ejercicios";
+"exercise.add" = "Añadir Ejercicio";
+"exercise.edit" = "Editar Ejercicio";
+"exercise.delete" = "Eliminar Ejercicio";
+"exercise.delete.confirm" = "¿Eliminar ejercicio?";
+"exercise.delete.confirm.message" = "Esta acción no se puede deshacer.";
+"exercise.detail.title" = "Detalle";
+"exercise.select.title" = "Seleccionar ejercicio";
+
+"exercise.name" = "Nombre";
+"exercise.name.placeholder" = "Nombre del ejercicio";
+"exercise.description" = "Descripción";
+"exercise.description.placeholder" = "Descripción del ejercicio";
+"exercise.weight" = "Peso (kg)";
+"exercise.category" = "Categoría";
+"exercise.images" = "Imágenes";
+"exercise.information" = "Información";
+
+"exercise.category.pierna" = "Pierna";
+"exercise.category.pecho" = "Pecho";
+"exercise.category.espalda" = "Espalda";
+"exercise.category.hombro" = "Hombro";
+"exercise.category.brazos" = "Brazos";
+"exercise.category.core" = "Core";
+"exercise.category.otros" = "Otros";
+
+"exercise.filter.all" = "Todos";
+"exercise.filter.pierna" = "Pierna";
+"exercise.filter.pecho" = "Pecho";
+"exercise.filter.espalda" = "Espalda";
+"exercise.filter.hombro" = "Hombro";
+"exercise.filter.brazos" = "Brazos";
+"exercise.filter.core" = "Core";
+"exercise.filter.otros" = "Otros";
+
+/* Statistics */
+"stats.title" = "Progreso";
+"stats.subtitle" = "Ve la evolución de cada ejercicio";
+"stats.select.exercise" = "Selecciona un Ejercicio";
+"stats.filter.category" = "Filtrar por Categoría";
+"stats.no.data" = "No hay datos de progresión";
+"stats.no.data.message" = "Comienza a entrenar este ejercicio para ver tu evolución";
+"stats.recent.workouts" = "Entrenamientos Recientes";
+"stats.delete.workout" = "Eliminar";
+"stats.delete.workout.confirm" = "¿Estás seguro de que quieres eliminar este registro de peso?";
+
+/* Weight Editor */
+"weight.editor.title" = "Editar Peso";
+"weight.editor.weight" = "Peso (kg)";
+"weight.editor.current" = "Peso actual";
+"weight.editor.new" = "Nuevo peso";
+"weight.editor.save" = "Guardar";
+"weight.editor.cancel" = "Cancelar";
+
+/* Workout Log */
+"workout.log.title" = "Registrar Entrenamiento";
+"workout.log.exercise" = "Ejercicio";
+"workout.log.sets" = "Series";
+"workout.log.reps" = "Repeticiones";
+"workout.log.weight" = "Peso (kg)";
+"workout.log.notes" = "Notas";
+"workout.log.notes.placeholder" = "Notas del entrenamiento";
+"workout.log.summary" = "Resumen";
+"workout.log.total.weight" = "Peso total levantado";
+"workout.log.save" = "Guardar";
+"workout.log.cancel" = "Cancelar";
+
+/* Common */
+"common.save" = "Guardar";
+"common.cancel" = "Cancelar";
+"common.delete" = "Eliminar";
+"common.edit" = "Editar";
+"common.add" = "Añadir";
+"common.close" = "Cerrar";
+"common.ok" = "OK";
+"common.yes" = "Sí";
+"common.no" = "No";
+
+/* Units */
+"unit.kg" = "kg";
+"unit.sets" = "series";
+"unit.reps" = "reps";

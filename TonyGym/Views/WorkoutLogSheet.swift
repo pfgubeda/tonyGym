@@ -24,56 +24,56 @@ struct WorkoutLogSheet: View {
             Form {
                 Section {
                     HStack {
-                        Text("Ejercicio")
+                        Text(NSLocalizedString("workout.log.exercise", comment: "Exercise"))
                         Spacer()
                         Text(exercise.title)
                             .foregroundStyle(.secondary)
                     }
                     
                     HStack {
-                        Text("Peso usado")
+                        Text(NSLocalizedString("workout.log.weight", comment: "Weight used"))
                         Spacer()
-                        TextField("kg", value: $weightUsed, format: .number)
+                        TextField(NSLocalizedString("unit.kg", comment: "kg unit"), value: $weightUsed, format: .number)
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
                     }
                     
                     HStack {
-                        Text("Series")
+                        Text(NSLocalizedString("workout.log.sets", comment: "Sets"))
                         Spacer()
                         Stepper("\(sets)", value: $sets, in: 1...20)
                     }
                     
                     HStack {
-                        Text("Repeticiones")
+                        Text(NSLocalizedString("workout.log.reps", comment: "Reps"))
                         Spacer()
                         Stepper("\(reps)", value: $reps, in: 1...100)
                     }
                 }
                 
-                Section("Notas") {
-                    TextField("Añadir notas sobre el entrenamiento...", text: $notes, axis: .vertical)
+                Section(NSLocalizedString("workout.log.notes", comment: "Notes")) {
+                    TextField(NSLocalizedString("workout.log.notes.placeholder", comment: "Notes placeholder"), text: $notes, axis: .vertical)
                         .lineLimit(3...6)
                 }
                 
-                Section("Resumen") {
+                Section(NSLocalizedString("workout.log.summary", comment: "Summary")) {
                     HStack {
-                        Text("Peso total levantado")
+                        Text(NSLocalizedString("workout.log.total.weight", comment: "Total weight lifted"))
                         Spacer()
-                        Text("\(totalWeight, specifier: "%.1f") kg")
+                        Text("\(totalWeight, specifier: "%.1f") \(NSLocalizedString("unit.kg", comment: "kg unit"))")
                             .bold()
                             .foregroundStyle(exercise.category.color)
                     }
                 }
             }
-            .navigationTitle("Registrar Entrenamiento")
+            .navigationTitle(NSLocalizedString("workout.log.title", comment: "Log workout"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") { dismiss() }
+                    Button(NSLocalizedString("common.cancel", comment: "Cancel")) { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Guardar") {
+                    Button(NSLocalizedString("common.save", comment: "Save")) {
                         saveWorkoutLog()
                         dismiss()
                     }

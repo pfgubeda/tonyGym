@@ -12,7 +12,7 @@ struct ExerciseListView: View {
         VStack(spacing: 8) {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    filterChip(label: "Todos", isSelected: selectedFilter == nil) { selectedFilter = nil }
+                    filterChip(label: NSLocalizedString("exercise.filter.all", comment: "All filter"), isSelected: selectedFilter == nil) { selectedFilter = nil }
                     ForEach(ExerciseCategory.allCases) { cat in
                         filterChip(label: cat.displayName, category: cat, isSelected: selectedFilter == cat) { selectedFilter = cat }
                     }
@@ -42,7 +42,7 @@ struct ExerciseListView: View {
                 .onDelete(perform: deleteItems)
             }
         }
-        .navigationTitle("Ejercicios")
+        .navigationTitle(NSLocalizedString("exercise.title", comment: "Exercises title"))
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button { showingAdd = true } label: { Image(systemName: "plus") }
@@ -117,24 +117,24 @@ struct ExerciseEditorView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Información") {
-                    TextField("Título", text: $title)
-                    TextField("Descripción (admite imágenes)", text: $details, axis: .vertical)
+                Section(NSLocalizedString("exercise.information", comment: "Information section")) {
+                    TextField(NSLocalizedString("exercise.name.placeholder", comment: "Exercise name placeholder"), text: $title)
+                    TextField(NSLocalizedString("exercise.description.placeholder", comment: "Exercise description placeholder"), text: $details, axis: .vertical)
                     HStack {
-                        Text("Peso por defecto")
+                        Text(NSLocalizedString("exercise.weight", comment: "Weight"))
                         Spacer()
-                        TextField("kg", value: $weight, format: .number)
+                        TextField(NSLocalizedString("unit.kg", comment: "kg unit"), value: $weight, format: .number)
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
                     }
-                    Picker("Categoría", selection: $category) {
+                    Picker(NSLocalizedString("exercise.category", comment: "Category"), selection: $category) {
                         ForEach(ExerciseCategory.allCases) { cat in
                             Text(cat.displayName).tag(cat)
                         }
                     }
                 }
 
-                Section("Imágenes") {
+                Section(NSLocalizedString("exercise.images", comment: "Images")) {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack {
                             ForEach(Array(images.enumerated()), id: \.offset) { idx, img in
@@ -144,7 +144,7 @@ struct ExerciseEditorView: View {
                                     .frame(width: 100, height: 100)
                                     .clipped()
                                     .contextMenu {
-                                        Button(role: .destructive) { images.remove(at: idx) } label: { Label("Eliminar", systemImage: "trash") }
+                                        Button(role: .destructive) { images.remove(at: idx) } label: { Label(NSLocalizedString("common.delete", comment: "Delete"), systemImage: "trash") }
                                     }
                             }
                             PhotosPickerButton { uiImage in
@@ -154,10 +154,10 @@ struct ExerciseEditorView: View {
                     }
                 }
             }
-            .navigationTitle(existing == nil ? "Nuevo ejercicio" : "Editar ejercicio")
+            .navigationTitle(existing == nil ? NSLocalizedString("exercise.add", comment: "Add exercise") : NSLocalizedString("exercise.edit", comment: "Edit exercise"))
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancelar") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Guardar", action: save) }
+                ToolbarItem(placement: .cancellationAction) { Button(NSLocalizedString("common.cancel", comment: "Cancel")) { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) { Button(NSLocalizedString("common.save", comment: "Save"), action: save) }
             }
         }
     }

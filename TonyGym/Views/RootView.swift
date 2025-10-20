@@ -7,21 +7,21 @@ struct RootView: View {
                 HomeView()
             }
             .tabItem {
-                Label("Hoy", systemImage: "calendar")
+                Label(NSLocalizedString("nav.today", comment: "Today tab"), systemImage: "calendar")
             }
 
             NavigationStack {
                 ExerciseListView()
             }
             .tabItem {
-                Label("Ejercicios", systemImage: "dumbbell")
+                Label(NSLocalizedString("nav.exercises", comment: "Exercises tab"), systemImage: "dumbbell")
             }
             
             NavigationStack {
                 StatisticsView()
             }
             .tabItem {
-                Label("Progreso", systemImage: "chart.line.uptrend.xyaxis")
+                Label(NSLocalizedString("nav.progress", comment: "Progress tab"), systemImage: "chart.line.uptrend.xyaxis")
             }
         }
     }

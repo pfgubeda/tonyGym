@@ -28,22 +28,22 @@ struct WeightEditorSheet: View {
                 }
                 
                 VStack(spacing: 16) {
-                    Text("Peso actual: \(exercise.defaultWeightKg, specifier: "%.1f") kg")
+                    Text("\(NSLocalizedString("weight.editor.current", comment: "Current weight")): \(exercise.defaultWeightKg, specifier: "%.1f") \(NSLocalizedString("unit.kg", comment: "kg unit"))")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     
                     VStack(spacing: 8) {
-                        Text("Nuevo peso")
+                        Text(NSLocalizedString("weight.editor.new", comment: "New weight"))
                             .font(.headline)
                         
                         HStack {
-                            TextField("Peso", value: $customWeight, format: .number)
+                            TextField(NSLocalizedString("weight.editor.weight", comment: "Weight"), value: $customWeight, format: .number)
                                 .keyboardType(.decimalPad)
                                 .multilineTextAlignment(.center)
                                 .font(.title)
                                 .bold()
                             
-                            Text("kg")
+                            Text(NSLocalizedString("unit.kg", comment: "kg unit"))
                                 .font(.title2)
                                 .foregroundStyle(.secondary)
                         }
@@ -116,14 +116,14 @@ struct WeightEditorSheet: View {
                 Spacer()
             }
             .padding()
-            .navigationTitle("Editar Peso")
+            .navigationTitle(NSLocalizedString("weight.editor.title", comment: "Edit weight"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") { dismiss() }
+                    Button(NSLocalizedString("common.cancel", comment: "Cancel")) { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Guardar") {
+                    Button(NSLocalizedString("common.save", comment: "Save")) {
                         saveWeight()
                         dismiss()
                     }
@@ -145,7 +145,7 @@ struct WeightEditorSheet: View {
             weightUsed: customWeight,
             sets: 1,
             reps: 1,
-            notes: "Peso actualizado desde Home"
+            notes: NSLocalizedString("home.exercise.weight.updated", comment: "Weight updated from Home")
         )
         context.insert(workoutLog)
     }

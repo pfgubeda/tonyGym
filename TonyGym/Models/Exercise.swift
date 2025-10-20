@@ -12,17 +12,17 @@ enum ExerciseCategory: Int, Codable, CaseIterable, Identifiable {
     case otros
 
     var id: Int { rawValue }
-    var displayName: String {
-        switch self {
-        case .pierna: return "Pierna"
-        case .pecho: return "Pecho"
-        case .espalda: return "Espalda"
-        case .hombro: return "Hombro"
-        case .brazos: return "Brazos"
-        case .core: return "Core"
-        case .otros: return "Otros"
+        var displayName: String {
+            switch self {
+            case .pierna: return NSLocalizedString("exercise.category.pierna", comment: "Legs category")
+            case .pecho: return NSLocalizedString("exercise.category.pecho", comment: "Chest category")
+            case .espalda: return NSLocalizedString("exercise.category.espalda", comment: "Back category")
+            case .hombro: return NSLocalizedString("exercise.category.hombro", comment: "Shoulders category")
+            case .brazos: return NSLocalizedString("exercise.category.brazos", comment: "Arms category")
+            case .core: return NSLocalizedString("exercise.category.core", comment: "Core category")
+            case .otros: return NSLocalizedString("exercise.category.otros", comment: "Other category")
+            }
         }
-    }
     
     var color: Color {
         switch self {
