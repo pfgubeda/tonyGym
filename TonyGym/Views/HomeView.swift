@@ -96,25 +96,44 @@ struct HomeView: View {
                 let isToday = day == Self.todayWeekday()
                 let isSelected = day == selectedWeekday
                 let isRest = isRestDay(day)
-                Text(day.short)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(
-                        Capsule()
-                            .fill(
-                                isSelected ? Color.accentColor.opacity(0.2) :
-                                (isRest ? Color.orange.opacity(0.15) : Color.clear)
-                            )
-                    )
-                    .overlay(
-                        Capsule()
-                            .stroke(
-                                isToday ? Color.accentColor :
-                                (isRest ? Color.orange.opacity(0.6) : Color.secondary.opacity(0.2)),
-                                lineWidth: isToday ? 2 : 1
-                            )
-                    )
-                    .onTapGesture { selectedWeekday = day }
+                let dayCategories = categoriesForDay(day)
+                
+                VStack(spacing: 4) {
+                    Text(day.short)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(
+                            Capsule()
+                                .fill(
+                                    isSelected ? Color.accentColor.opacity(0.2) :
+                                    (isRest ? Color.orange.opacity(0.15) : Color.clear)
+                                )
+                        )
+                        .overlay(
+                            Capsule()
+                                .stroke(
+                                    isToday ? Color.accentColor :
+                                    (isRest ? Color.orange.opacity(0.6) : Color.secondary.opacity(0.2)),
+                                    lineWidth: isToday ? 2 : 1
+                                )
+                        )
+                        .onTapGesture { selectedWeekday = day }
+                    
+                    if !dayCategories.isEmpty {
+                        HStack(spacing: 2) {
+                            ForEach(dayCategories.prefix(3), id: \.self) { category in
+                                Circle()
+                                    .fill(category.color)
+                                    .frame(width: 6, height: 6)
+                            }
+                            if dayCategories.count > 3 {
+                                Text("+")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -178,7 +197,8 @@ struct HomeView: View {
                                         .font(.caption2)
                                         .padding(.horizontal, 6)
                                         .padding(.vertical, 2)
-                                        .background(Capsule().fill(Color.secondary.opacity(0.15)))
+                                        .background(Capsule().fill(ex.category.color.opacity(0.2)))
+                                        .foregroundStyle(ex.category.color)
                                 }
                             }
                                 if let ex, !ex.details.isEmpty {
@@ -253,6 +273,13 @@ struct HomeView: View {
         guard let routine = selectedRoutine else { return false }
         // A day is REST only if there are zero exercises scheduled for that weekday
         return !routine.entries.contains { $0.weekday == day }
+    }
+    
+    private func categoriesForDay(_ day: Weekday) -> [ExerciseCategory] {
+        guard let routine = selectedRoutine else { return [] }
+        let dayEntries = routine.entries.filter { $0.weekday == day }
+        let categories = dayEntries.compactMap { $0.exercise?.category }
+        return Array(Set(categories)).sorted { $0.rawValue < $1.rawValue }
     }
 
     private func dayPlanForSelectedDay() -> DayPlan? {
@@ -466,7 +493,8 @@ private struct ExercisePickerView: View {
                                 .font(.caption)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
-                                .background(Capsule().fill(Color.secondary.opacity(0.15)))
+                                .background(Capsule().fill(exercise.category.color.opacity(0.2)))
+                                .foregroundStyle(exercise.category.color)
                             Text(String(format: "%.1f kg", exercise.defaultWeightKg))
                             .foregroundStyle(.secondary)
                     }
@@ -483,15 +511,15 @@ private struct ExercisePickerView: View {
     }
 
     private var categoryFilterBar: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                filterChip(label: "Todos", isSelected: selectedFilter == nil) { selectedFilter = nil }
-                ForEach(ExerciseCategory.allCases) { cat in
-                    filterChip(label: cat.displayName, isSelected: selectedFilter == cat) { selectedFilter = cat }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    filterChip(label: "Todos", isSelected: selectedFilter == nil) { selectedFilter = nil }
+                    ForEach(ExerciseCategory.allCases) { cat in
+                        filterChip(label: cat.displayName, category: cat, isSelected: selectedFilter == cat) { selectedFilter = cat }
+                    }
                 }
+                .padding(.horizontal)
             }
-            .padding(.horizontal)
-        }
     }
 
     private func filterChip(label: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
@@ -502,6 +530,19 @@ private struct ExercisePickerView: View {
                 .padding(.vertical, 6)
                 .background(Capsule().fill(isSelected ? Color.accentColor.opacity(0.2) : Color.secondary.opacity(0.12)))
                 .overlay(Capsule().stroke(isSelected ? Color.accentColor : Color.secondary.opacity(0.3), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+    }
+    
+    private func filterChip(label: String, category: ExerciseCategory, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(label)
+                .font(.caption)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Capsule().fill(isSelected ? category.color.opacity(0.3) : category.color.opacity(0.1)))
+                .overlay(Capsule().stroke(isSelected ? category.color : category.color.opacity(0.5), lineWidth: 1))
+                .foregroundStyle(isSelected ? category.color : category.color.opacity(0.8))
         }
         .buttonStyle(.plain)
     }

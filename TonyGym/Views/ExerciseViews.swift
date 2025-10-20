@@ -14,7 +14,7 @@ struct ExerciseListView: View {
                 HStack(spacing: 8) {
                     filterChip(label: "Todos", isSelected: selectedFilter == nil) { selectedFilter = nil }
                     ForEach(ExerciseCategory.allCases) { cat in
-                        filterChip(label: cat.displayName, isSelected: selectedFilter == cat) { selectedFilter = cat }
+                        filterChip(label: cat.displayName, category: cat, isSelected: selectedFilter == cat) { selectedFilter = cat }
                     }
                 }
                 .padding(.horizontal)
@@ -30,7 +30,8 @@ struct ExerciseListView: View {
                                     .font(.caption)
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 4)
-                                    .background(Capsule().fill(Color.secondary.opacity(0.15)))
+                                    .background(Capsule().fill(ex.category.color.opacity(0.2)))
+                                    .foregroundStyle(ex.category.color)
                             }
                             if !ex.details.isEmpty {
                                 Text(ex.details).font(.subheadline).lineLimit(1).foregroundStyle(.secondary)
@@ -69,6 +70,19 @@ struct ExerciseListView: View {
                 .padding(.vertical, 6)
                 .background(Capsule().fill(isSelected ? Color.accentColor.opacity(0.2) : Color.secondary.opacity(0.12)))
                 .overlay(Capsule().stroke(isSelected ? Color.accentColor : Color.secondary.opacity(0.3), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+    }
+    
+    private func filterChip(label: String, category: ExerciseCategory, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(label)
+                .font(.caption)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Capsule().fill(isSelected ? category.color.opacity(0.3) : category.color.opacity(0.1)))
+                .overlay(Capsule().stroke(isSelected ? category.color : category.color.opacity(0.5), lineWidth: 1))
+                .foregroundStyle(isSelected ? category.color : category.color.opacity(0.8))
         }
         .buttonStyle(.plain)
     }

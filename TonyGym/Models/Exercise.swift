@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import SwiftData
 
 enum ExerciseCategory: Int, Codable, CaseIterable, Identifiable {
@@ -20,6 +21,18 @@ enum ExerciseCategory: Int, Codable, CaseIterable, Identifiable {
         case .brazos: return "Brazos"
         case .core: return "Core"
         case .otros: return "Otros"
+        }
+    }
+    
+    var color: Color {
+        switch self {
+        case .pierna: return .green
+        case .pecho: return .red
+        case .espalda: return .blue
+        case .hombro: return .orange
+        case .brazos: return .purple
+        case .core: return .yellow
+        case .otros: return .gray
         }
     }
 }
