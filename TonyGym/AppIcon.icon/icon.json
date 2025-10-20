@@ -1,0 +1,176 @@
+{
+  "fill-specializations" : [
+    {
+      "value" : "automatic"
+    },
+    {
+      "appearance" : "dark",
+      "value" : "automatic"
+    }
+  ],
+  "groups" : [
+    {
+      "blur-material" : null,
+      "layers" : [
+        {
+          "blend-mode-specializations" : [
+            {
+              "value" : "plus-darker"
+            },
+            {
+              "appearance" : "dark",
+              "value" : "plus-darker"
+            },
+            {
+              "appearance" : "tinted",
+              "value" : "plus-darker"
+            }
+          ],
+          "fill-specializations" : [
+            {
+              "value" : {
+                "linear-gradient" : [
+                  "display-p3:0.00000,0.00000,0.00000,1.00000",
+                  "display-p3:0.94668,1.00000,0.95699,1.00000"
+                ],
+                "orientation" : {
+                  "start" : {
+                    "x" : 0.5,
+                    "y" : 0.7270816655195743
+                  },
+                  "stop" : {
+                    "x" : 0.5,
+                    "y" : 0.23522402352059338
+                  }
+                }
+              }
+            },
+            {
+              "appearance" : "light",
+              "value" : {
+                "linear-gradient" : [
+                  "display-p3:0.00000,0.00000,0.00000,1.00000",
+                  "display-p3:0.94668,1.00000,0.95699,1.00000"
+                ],
+                "orientation" : {
+                  "start" : {
+                    "x" : 0.5,
+                    "y" : 0.7270816655195743
+                  },
+                  "stop" : {
+                    "x" : 0.5,
+                    "y" : 0.23522402352059338
+                  }
+                }
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "linear-gradient" : [
+                  "extended-gray:1.00000,1.00000",
+                  "display-p3:0.00000,0.00000,0.00000,1.00000"
+                ],
+                "orientation" : {
+                  "start" : {
+                    "x" : 0.5,
+                    "y" : 0.7270816655195743
+                  },
+                  "stop" : {
+                    "x" : 0.5,
+                    "y" : 0.23522402352059338
+                  }
+                }
+              }
+            }
+          ],
+          "glass" : true,
+          "image-name" : "dumbbells.png",
+          "name" : "dumbbells",
+          "position" : {
+            "scale" : 1.5,
+            "translation-in-points" : [
+              0,
+              221.2275765951806
+            ]
+          }
+        }
+      ],
+      "name" : "gym",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    },
+    {
+      "layers" : [
+        {
+          "fill-specializations" : [
+            {
+              "value" : {
+                "linear-gradient" : [
+                  "display-p3:1.09317,0.16405,0.41542,1.00000",
+                  "extended-gray:1.00000,1.00000"
+                ],
+                "orientation" : {
+                  "start" : {
+                    "x" : 0.43509507098014155,
+                    "y" : 0.5428260191161068
+                  },
+                  "stop" : {
+                    "x" : 0.4515295139103363,
+                    "y" : 0.8644781667973429
+                  }
+                }
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "linear-gradient" : [
+                  "display-p3:1.09317,0.16405,0.41542,1.00000",
+                  "display-p3:0.00000,0.00000,0.00000,1.00000"
+                ],
+                "orientation" : {
+                  "start" : {
+                    "x" : 0.43509507098014155,
+                    "y" : 0.5428260191161068
+                  },
+                  "stop" : {
+                    "x" : 0.4515295139103363,
+                    "y" : 0.8644781667973429
+                  }
+                }
+              }
+            }
+          ],
+          "image-name" : "drinks.png",
+          "name" : "drinks",
+          "position" : {
+            "scale" : 1.7,
+            "translation-in-points" : [
+              -5.9704774965098295,
+              -103.61255518045039
+            ]
+          }
+        }
+      ],
+      "name" : "tonic",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "squares" : "shared"
+  }
+}

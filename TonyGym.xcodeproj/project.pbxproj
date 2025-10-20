@@ -55,6 +55,7 @@
 		6584B64F2EA6A4B90038AD45 /* Exceptions for "TonyGym" folder in "TodayWorkoutWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				AppIcon.icon,
 				Models/DayPlan.swift,
 				Models/Exercise.swift,
 				Models/Routine.swift,
