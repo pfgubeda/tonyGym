@@ -7,6 +7,7 @@ struct HomeView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \Routine.name) private var routines: [Routine]
     @Query(sort: \Exercise.title) private var exercises: [Exercise]
+    @StateObject private var weightFormatter = WeightFormatter.shared
 
     @State private var selectedRoutine: Routine?
     @State private var selectedWeekday: Weekday = Self.todayWeekday()

@@ -128,5 +128,6 @@
 
 /* Units */
 "unit.kg" = "kg";
+"unit.lb" = "lb";
 "unit.sets" = "series";
 "unit.reps" = "reps";

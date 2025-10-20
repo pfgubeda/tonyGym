@@ -6,6 +6,10 @@ struct WeightEditorSheet: View {
     @Environment(\.modelContext) private var context
     let exercise: Exercise
     @Binding var customWeight: Double
+    @StateObject private var weightFormatter = WeightFormatter.shared
+    
+    // Display weight in user's preferred unit
+    @State private var displayWeight: Double = 0
     
     var body: some View {
         NavigationStack {
@@ -28,7 +32,7 @@ struct WeightEditorSheet: View {
                 }
                 
                 VStack(spacing: 16) {
-                    Text("\(NSLocalizedString("weight.editor.current", comment: "Current weight")): \(exercise.defaultWeightKg, specifier: "%.1f") \(NSLocalizedString("unit.kg", comment: "kg unit"))")
+                    Text("\(NSLocalizedString("weight.editor.current", comment: "Current weight")): \(weightFormatter.formatWeight(exercise.defaultWeightKg))")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     
@@ -37,13 +41,13 @@ struct WeightEditorSheet: View {
                             .font(.headline)
                         
                         HStack {
-                            TextField(NSLocalizedString("weight.editor.weight", comment: "Weight"), value: $customWeight, format: .number)
+                            TextField(NSLocalizedString("weight.editor.weight", comment: "Weight"), value: $displayWeight, format: .number)
                                 .keyboardType(.decimalPad)
                                 .multilineTextAlignment(.center)
                                 .font(.title)
                                 .bold()
                             
-                            Text(NSLocalizedString("unit.kg", comment: "kg unit"))
+                            Text(weightFormatter.unitNameShort)
                                 .font(.title2)
                                 .foregroundStyle(.secondary)
                         }
@@ -57,12 +61,12 @@ struct WeightEditorSheet: View {
                     // Quick adjustment buttons
                     HStack(spacing: 16) {
                         Button {
-                            customWeight = max(0, customWeight - 2.5)
+                            displayWeight = max(0, displayWeight - weightIncrement)
                         } label: {
                             VStack {
                                 Image(systemName: "minus.circle.fill")
                                     .font(.title2)
-                                Text("-2.5")
+                                Text("-\(weightIncrement, specifier: "%.1f")")
                                     .font(.caption)
                             }
                             .foregroundStyle(.secondary)
@@ -70,12 +74,12 @@ struct WeightEditorSheet: View {
                         .buttonStyle(.plain)
                         
                         Button {
-                            customWeight = max(0, customWeight - 1.25)
+                            displayWeight = max(0, displayWeight - (weightIncrement / 2))
                         } label: {
                             VStack {
                                 Image(systemName: "minus.circle")
                                     .font(.title2)
-                                Text("-1.25")
+                                Text("-\(weightIncrement / 2, specifier: "%.1f")")
                                     .font(.caption)
                             }
                             .foregroundStyle(.secondary)
@@ -85,12 +89,12 @@ struct WeightEditorSheet: View {
                         Spacer()
                         
                         Button {
-                            customWeight += 1.25
+                            displayWeight += (weightIncrement / 2)
                         } label: {
                             VStack {
                                 Image(systemName: "plus.circle")
                                     .font(.title2)
-                                Text("+1.25")
+                                Text("+\(weightIncrement / 2, specifier: "%.1f")")
                                     .font(.caption)
                             }
                             .foregroundStyle(.secondary)
@@ -98,12 +102,12 @@ struct WeightEditorSheet: View {
                         .buttonStyle(.plain)
                         
                         Button {
-                            customWeight += 2.5
+                            displayWeight += weightIncrement
                         } label: {
                             VStack {
                                 Image(systemName: "plus.circle.fill")
                                     .font(.title2)
-                                Text("+2.5")
+                                Text("+\(weightIncrement, specifier: "%.1f")")
                                     .font(.caption)
                             }
                             .foregroundStyle(.secondary)
@@ -130,19 +134,34 @@ struct WeightEditorSheet: View {
                     .bold()
                 }
             }
+            .onAppear {
+                // Initialize displayWeight with converted value
+                displayWeight = weightFormatter.convertFromKilograms(customWeight)
+            }
         }
     }
     
+    // Weight increment based on unit (2.5 kg or 5 lb)
+    private var weightIncrement: Double {
+        weightFormatter.preferredUnit == .kilograms ? 2.5 : 5.0
+    }
+    
     private func saveWeight() {
+        // Convert display weight back to kg for storage
+        let weightInKg = weightFormatter.convertToKilograms(displayWeight)
+        
         // Update the exercise default weight
-        exercise.defaultWeightKg = customWeight
+        exercise.defaultWeightKg = weightInKg
         exercise.updatedAt = .now
+        
+        // Update the binding
+        customWeight = weightInKg
         
         // Also save to workout log for statistics
         let workoutLog = WorkoutLog(
             date: Date(),
             exercise: exercise,
-            weightUsed: customWeight,
+            weightUsed: weightInKg,
             sets: 1,
             reps: 1,
             notes: NSLocalizedString("home.exercise.weight.updated", comment: "Weight updated from Home")
