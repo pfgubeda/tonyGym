@@ -411,13 +411,18 @@ struct HomeView: View {
     
     private func updateWidgetSnapshot() {
         guard let routine = selectedRoutine else { return }
-        let dayEntries = entriesForSelectedDay()
-        let snapshot = WidgetSync.buildSnapshot(
+        let todayWeekday = Self.todayWeekday()
+        let todayEntries = entriesForWeekday(todayWeekday)
+        let snapshot = WidgetSync.buildTodaySnapshot(
             routineName: routine.name,
-            weekday: selectedWeekday,
-            entries: dayEntries
+            entries: todayEntries
         )
         WidgetSync.writeTodaySnapshot(snapshot: snapshot)
+    }
+    
+    private func entriesForWeekday(_ weekday: Weekday) -> [RoutineEntry] {
+        guard let routine = selectedRoutine else { return [] }
+        return routine.entries.filter { $0.weekday == weekday }
     }
 
     private static func todayWeekday() -> Weekday {

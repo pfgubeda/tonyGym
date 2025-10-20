@@ -26,6 +26,19 @@ enum WidgetSync {
         }
         return WidgetRoutineSnapshot(date: Date(), weekday: weekday.rawValue, routineName: routineName, items: items)
     }
+    
+    static func buildTodaySnapshot(routineName: String, entries: [RoutineEntry]) -> WidgetRoutineSnapshot {
+        let today = Date()
+        let calendar = Calendar.current
+        let weekday = calendar.component(.weekday, from: today)
+        let weekdayEnum = Weekday(rawValue: weekday == 1 ? 7 : weekday - 1) ?? .monday // Convert Sunday=1 to Sunday=7
+        
+        let items: [WidgetRoutineItem] = entries.compactMap { entry in
+            guard let ex = entry.exercise else { return nil }
+            return WidgetRoutineItem(title: ex.title, categoryRaw: ex.category.rawValue, weightKg: ex.defaultWeightKg)
+        }
+        return WidgetRoutineSnapshot(date: today, weekday: weekdayEnum.rawValue, routineName: routineName, items: items)
+    }
 }
 
 

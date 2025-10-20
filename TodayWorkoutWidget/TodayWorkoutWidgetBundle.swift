@@ -12,6 +12,7 @@ import SwiftUI
 struct TodayWorkoutWidgetBundle: WidgetBundle {
     var body: some Widget {
         TodayWorkoutWidget()
+        LockScreenWidget()
         TodayWorkoutWidgetControl()
         TodayWorkoutWidgetLiveActivity()
     }

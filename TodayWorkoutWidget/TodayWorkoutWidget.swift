@@ -31,12 +31,30 @@ struct Provider: TimelineProvider {
     }
 
     func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
-        let entry = SimpleEntry(date: Date(), snapshot: readSnapshot() ?? placeholderSnapshot())
+        let today = Date()
+        let snapshot = readSnapshot() ?? placeholderSnapshot()
+        // Always use today's date, not the stored date
+        let todaySnapshot = WidgetRoutineSnapshot(
+            date: today,
+            weekday: snapshot.weekday,
+            routineName: snapshot.routineName,
+            items: snapshot.items
+        )
+        let entry = SimpleEntry(date: today, snapshot: todaySnapshot)
         completion(entry)
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
-        let entry = SimpleEntry(date: Date(), snapshot: readSnapshot() ?? placeholderSnapshot())
+        let today = Date()
+        let snapshot = readSnapshot() ?? placeholderSnapshot()
+        // Always use today's date, not the stored date
+        let todaySnapshot = WidgetRoutineSnapshot(
+            date: today,
+            weekday: snapshot.weekday,
+            routineName: snapshot.routineName,
+            items: snapshot.items
+        )
+        let entry = SimpleEntry(date: today, snapshot: todaySnapshot)
         let timeline = Timeline(entries: [entry], policy: .after(Date().addingTimeInterval(15 * 60)))
         completion(timeline)
     }
