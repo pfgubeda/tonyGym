@@ -6,20 +6,40 @@ struct ExerciseListView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \Exercise.title) private var exercises: [Exercise]
     @State private var showingAdd: Bool = false
+    @State private var selectedFilter: ExerciseCategory? = nil
 
     var body: some View {
-        List {
-            ForEach(exercises) { ex in
-                NavigationLink(destination: ExerciseEditorView(exercise: ex)) {
-                    VStack(alignment: .leading) {
-                        Text(ex.title).font(.headline)
-                        if !ex.details.isEmpty {
-                            Text(ex.details).font(.subheadline).lineLimit(1).foregroundStyle(.secondary)
+        VStack(spacing: 8) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    filterChip(label: "Todos", isSelected: selectedFilter == nil) { selectedFilter = nil }
+                    ForEach(ExerciseCategory.allCases) { cat in
+                        filterChip(label: cat.displayName, isSelected: selectedFilter == cat) { selectedFilter = cat }
+                    }
+                }
+                .padding(.horizontal)
+            }
+            List {
+                ForEach(filteredExercises()) { ex in
+                    NavigationLink(destination: ExerciseEditorView(exercise: ex)) {
+                        VStack(alignment: .leading) {
+                            HStack {
+                                Text(ex.title).font(.headline)
+                                Spacer()
+                                Text(ex.category.displayName)
+                                    .font(.caption)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Capsule().fill(Color.secondary.opacity(0.15)))
+                            }
+                            if !ex.details.isEmpty {
+                                Text(ex.details).font(.subheadline).lineLimit(1).foregroundStyle(.secondary)
+                            }
                         }
                     }
                 }
+                .onDelete(perform: deleteItems)
             }
-            .onDelete(perform: deleteItems)
         }
         .navigationTitle("Ejercicios")
         .toolbar {
@@ -33,7 +53,29 @@ struct ExerciseListView: View {
     }
 
     private func deleteItems(at offsets: IndexSet) {
-        for index in offsets { context.delete(exercises[index]) }
+        let source = filteredExercises()
+        for index in offsets {
+            if let globalIndex = exercises.firstIndex(where: { $0 === source[index] }) {
+                context.delete(exercises[globalIndex])
+            }
+        }
+    }
+
+    private func filterChip(label: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(label)
+                .font(.caption)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Capsule().fill(isSelected ? Color.accentColor.opacity(0.2) : Color.secondary.opacity(0.12)))
+                .overlay(Capsule().stroke(isSelected ? Color.accentColor : Color.secondary.opacity(0.3), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func filteredExercises() -> [Exercise] {
+        guard let selectedFilter else { return exercises }
+        return exercises.filter { $0.category == selectedFilter }
     }
 }
 
@@ -45,6 +87,7 @@ struct ExerciseEditorView: View {
     @State var details: String
     @State var weight: Double
     @State var images: [UIImage]
+    @State var category: ExerciseCategory
 
     private var existing: Exercise?
 
@@ -54,6 +97,7 @@ struct ExerciseEditorView: View {
         _details = State(initialValue: exercise?.details ?? "")
         _weight = State(initialValue: exercise?.defaultWeightKg ?? 0)
         _images = State(initialValue: exercise?.images.compactMap { UIImage(data: $0.data) } ?? [])
+        _category = State(initialValue: exercise?.category ?? .otros)
     }
 
     var body: some View {
@@ -68,6 +112,11 @@ struct ExerciseEditorView: View {
                         TextField("kg", value: $weight, format: .number)
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
+                    }
+                    Picker("Categoría", selection: $category) {
+                        ForEach(ExerciseCategory.allCases) { cat in
+                            Text(cat.displayName).tag(cat)
+                        }
                     }
                 }
 
@@ -106,9 +155,10 @@ struct ExerciseEditorView: View {
             existing.details = details
             existing.defaultWeightKg = weight
             existing.images = attachments
+            existing.category = category
             existing.updatedAt = .now
         } else {
-            let ex = Exercise(title: title, details: details, defaultWeightKg: weight, images: attachments)
+            let ex = Exercise(title: title, details: details, defaultWeightKg: weight, category: category, images: attachments)
             context.insert(ex)
         }
         dismiss()

@@ -169,9 +169,18 @@ struct HomeView: View {
                     ForEach(Array(entriesForSelectedDay().enumerated()), id: \.element.persistentModelID) { _, entry in
                         let ex = entry.exercise
                         HStack(spacing: 12) {
-                            VStack(alignment: .leading, spacing: 4) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack(spacing: 6) {
                                 Text(ex?.title ?? "(Eliminado)")
                                     .font(.body)
+                                if let ex {
+                                    Text(ex.category.displayName)
+                                        .font(.caption2)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(Capsule().fill(Color.secondary.opacity(0.15)))
+                                }
+                            }
                                 if let ex, !ex.details.isEmpty {
                                     Text(ex.details)
                                         .font(.caption)
@@ -242,10 +251,8 @@ struct HomeView: View {
 
     private func isRestDay(_ day: Weekday) -> Bool {
         guard let routine = selectedRoutine else { return false }
-        let hasEntries = routine.entries.contains { $0.weekday == day }
-        if hasEntries { return false }
-        if let plan = routine.dayPlans.first(where: { $0.weekday == day }), !plan.title.isEmpty { return false }
-        return true
+        // A day is REST only if there are zero exercises scheduled for that weekday
+        return !routine.entries.contains { $0.weekday == day }
     }
 
     private func dayPlanForSelectedDay() -> DayPlan? {
@@ -256,7 +263,7 @@ struct HomeView: View {
     private func dayHeaderTitle() -> String {
         let base = "Rutina de \(weekdayTitle(selectedWeekday))"
         if let plan = dayPlanForSelectedDay(), !plan.title.isEmpty {
-            return "\(base) · \(plan.title)"
+            return plan.title
         }
         return base
     }
@@ -441,10 +448,13 @@ private struct ExercisePickerView: View {
     let exercises: [Exercise]
     var onPick: (Exercise) -> Void
     @Environment(\.dismiss) var dismiss
+    @State private var selectedFilter: ExerciseCategory? = nil
 
     var body: some View {
         NavigationStack {
-            List(exercises) { exercise in
+            VStack(spacing: 8) {
+                categoryFilterBar
+                List(filteredExercises()) { exercise in
                 Button {
                     onPick(exercise)
                     dismiss()
@@ -452,9 +462,15 @@ private struct ExercisePickerView: View {
                     HStack {
                         Text(exercise.title)
                         Spacer()
-                        Text(String(format: "%.1f kg", exercise.defaultWeightKg))
+                            Text(exercise.category.displayName)
+                                .font(.caption)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Capsule().fill(Color.secondary.opacity(0.15)))
+                            Text(String(format: "%.1f kg", exercise.defaultWeightKg))
                             .foregroundStyle(.secondary)
                     }
+                }
                 }
             }
             .navigationTitle("Seleccionar ejercicio")
@@ -464,6 +480,35 @@ private struct ExercisePickerView: View {
                 }
             }
         }
+    }
+
+    private var categoryFilterBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                filterChip(label: "Todos", isSelected: selectedFilter == nil) { selectedFilter = nil }
+                ForEach(ExerciseCategory.allCases) { cat in
+                    filterChip(label: cat.displayName, isSelected: selectedFilter == cat) { selectedFilter = cat }
+                }
+            }
+            .padding(.horizontal)
+        }
+    }
+
+    private func filterChip(label: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(label)
+                .font(.caption)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Capsule().fill(isSelected ? Color.accentColor.opacity(0.2) : Color.secondary.opacity(0.12)))
+                .overlay(Capsule().stroke(isSelected ? Color.accentColor : Color.secondary.opacity(0.3), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func filteredExercises() -> [Exercise] {
+        guard let selectedFilter else { return exercises }
+        return exercises.filter { $0.category == selectedFilter }
     }
 }
 
@@ -482,6 +527,7 @@ private enum ExportImportManager {
             var title: String
             var details: String
             var defaultWeightKg: Double
+                var categoryRaw: Int
         }
         struct ExportEntry: Codable {
             var weekday: Int
@@ -507,7 +553,8 @@ private enum ExportImportManager {
                         id: uuid,
                         title: ex.title,
                         details: ex.details,
-                        defaultWeightKg: ex.defaultWeightKg
+                        defaultWeightKg: ex.defaultWeightKg,
+                        categoryRaw: ex.categoryRaw
                     ))
                 }
             }
@@ -523,7 +570,7 @@ private enum ExportImportManager {
         let payload = try JSONDecoder().decode(ExportRoutinePayload.self, from: data)
         var importedExercisesById: [UUID: Exercise] = [:]
         for ex in payload.exercises {
-            let exercise = Exercise(title: ex.title, details: ex.details, defaultWeightKg: ex.defaultWeightKg, images: [])
+            let exercise = Exercise(title: ex.title, details: ex.details, defaultWeightKg: ex.defaultWeightKg, category: ExerciseCategory(rawValue: ex.categoryRaw) ?? .otros, images: [])
             context.insert(exercise)
             importedExercisesById[ex.id] = exercise
         }
