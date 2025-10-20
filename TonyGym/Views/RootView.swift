@@ -16,6 +16,13 @@ struct RootView: View {
             .tabItem {
                 Label("Ejercicios", systemImage: "dumbbell")
             }
+            
+            NavigationStack {
+                StatisticsView()
+            }
+            .tabItem {
+                Label("Progreso", systemImage: "chart.line.uptrend.xyaxis")
+            }
         }
     }
 }

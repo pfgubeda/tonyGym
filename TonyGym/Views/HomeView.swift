@@ -20,6 +20,13 @@ struct HomeView: View {
     @State private var detailExercise: Exercise?
     @State private var editingDayTitle: Bool = false
     @State private var dayTitleDraft: String = ""
+    @State private var showingWorkoutLog: Bool = false
+    @State private var selectedEntryForLog: RoutineEntry?
+    @State private var showingWeightEditor: Bool = false
+    @State private var selectedExerciseForWeight: Exercise?
+    @State private var customWeight: Double = 0
+    @State private var weightChangeTimer: Timer?
+    @State private var pendingWeightChange: (exercise: Exercise, weight: Double)?
 
     var body: some View {
         NavigationStack {
@@ -216,10 +223,17 @@ struct HomeView: View {
                                     Image(systemName: "minus.circle.fill").foregroundStyle(.secondary)
                                 }
                                 .buttonStyle(.plain)
-                                Text(weightString(ex?.defaultWeightKg ?? 0))
-                                    .monospacedDigit()
-                                    .frame(minWidth: 72, alignment: .trailing)
-                                    .foregroundStyle(.secondary)
+                            Text(weightString(ex?.defaultWeightKg ?? 0))
+                                .monospacedDigit()
+                                .frame(minWidth: 72, alignment: .trailing)
+                                .foregroundStyle(.secondary)
+                                .onTapGesture {
+                                    if let ex = ex {
+                                        selectedExerciseForWeight = ex
+                                        customWeight = ex.defaultWeightKg
+                                        showingWeightEditor = true
+                                    }
+                                }
                                 Button {
                                     if let ex { adjustWeight(exercise: ex, delta: 2.5) }
                                 } label: {
@@ -232,6 +246,12 @@ struct HomeView: View {
                         .onTapGesture {
                             if let ex { detailExercise = ex }
                         }
+                        .onLongPressGesture {
+                            if let ex = ex {
+                                selectedEntryForLog = entry
+                                showingWorkoutLog = true
+                            }
+                        }
                         .swipeActions {
                             Button(role: .destructive) { deleteEntry(entry) } label: { Label("Eliminar", systemImage: "trash") }
                         }
@@ -242,6 +262,16 @@ struct HomeView: View {
         }
         .sheet(item: $detailExercise) { ex in
             ExerciseDetailSheet(exercise: ex)
+        }
+        .sheet(isPresented: $showingWorkoutLog) {
+            if let entry = selectedEntryForLog, let exercise = entry.exercise {
+                WorkoutLogSheet(exercise: exercise, entry: entry)
+            }
+        }
+        .sheet(isPresented: $showingWeightEditor) {
+            if let exercise = selectedExerciseForWeight {
+                WeightEditorSheet(exercise: exercise, customWeight: $customWeight)
+            }
         }
         .sheet(isPresented: $editingDayTitle) {
             NavigationStack {
@@ -380,6 +410,34 @@ struct HomeView: View {
         if newValue < 0 { newValue = 0 }
         exercise.defaultWeightKg = newValue
         exercise.updatedAt = .now
+        
+        // Cancel previous timer if exists
+        weightChangeTimer?.invalidate()
+        
+        // Store pending change
+        pendingWeightChange = (exercise: exercise, weight: newValue)
+        
+        // Set timer to save after 2 seconds of no changes
+        weightChangeTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { _ in
+            savePendingWeightChange()
+        }
+    }
+    
+    private func savePendingWeightChange() {
+        guard let pending = pendingWeightChange else { return }
+        
+        let workoutLog = WorkoutLog(
+            date: Date(),
+            exercise: pending.exercise,
+            weightUsed: pending.weight,
+            sets: 1,
+            reps: 1,
+            notes: "Ajuste rápido desde Home"
+        )
+        context.insert(workoutLog)
+        
+        // Clear pending change
+        pendingWeightChange = nil
     }
 
     private var editRoutineNameSheet: some View {
