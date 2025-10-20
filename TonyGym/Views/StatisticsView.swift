@@ -8,6 +8,7 @@ struct StatisticsView: View {
     @Query private var exercises: [Exercise]
     
     @State private var selectedExercise: Exercise?
+    @State private var selectedCategory: ExerciseCategory?
     
     
     var body: some View {
@@ -20,6 +21,7 @@ struct StatisticsView: View {
                     weightProgressionChart
                     recentWorkoutsList
                 } else {
+                    categoryFilterSection
                     exerciseSelector
                 }
             }
@@ -37,6 +39,43 @@ struct StatisticsView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
     
+    private var categoryFilterSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Filtrar por Categoría")
+                .font(.headline)
+                .bold()
+            
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    // All categories button
+                    filterChip(
+                        label: "Todos",
+                        category: .otros, // Use a neutral color
+                        isSelected: selectedCategory == nil
+                    ) {
+                        selectedCategory = nil
+                    }
+                    
+                    ForEach(ExerciseCategory.allCases) { category in
+                        filterChip(
+                            label: category.displayName,
+                            category: category,
+                            isSelected: selectedCategory == category
+                        ) {
+                            selectedCategory = selectedCategory == category ? nil : category
+                        }
+                    }
+                }
+                .padding(.horizontal, 4)
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.ultraThinMaterial)
+        )
+    }
+    
     private var exerciseSelector: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Selecciona un Ejercicio")
@@ -44,7 +83,7 @@ struct StatisticsView: View {
                 .bold()
             
             LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
-                ForEach(exercises) { exercise in
+                ForEach(filteredExercises) { exercise in
                     ExerciseCard(
                         exercise: exercise,
                         isSelected: selectedExercise?.id == exercise.id,
@@ -229,6 +268,14 @@ struct StatisticsView: View {
     }
     
     
+    private var filteredExercises: [Exercise] {
+        if let selectedCategory = selectedCategory {
+            return exercises.filter { $0.category == selectedCategory }
+        } else {
+            return exercises
+        }
+    }
+    
     private var chartData: [ChartDataPoint] {
         guard let selectedExercise = selectedExercise else { return [] }
         
@@ -248,6 +295,25 @@ struct StatisticsView: View {
         }) {
             context.delete(logToDelete)
         }
+    }
+    
+    private func filterChip(label: String, category: ExerciseCategory, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(label)
+                .font(.system(.caption, design: .rounded, weight: .medium))
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(
+                    Capsule()
+                        .fill(isSelected ? category.color.opacity(0.3) : category.color.opacity(0.1))
+                )
+                .overlay(
+                    Capsule()
+                        .stroke(isSelected ? category.color : category.color.opacity(0.5), lineWidth: 1.5)
+                )
+                .foregroundStyle(isSelected ? category.color : category.color.opacity(0.8))
+        }
+        .buttonStyle(.plain)
     }
     
 }

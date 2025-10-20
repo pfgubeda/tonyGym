@@ -126,8 +126,9 @@ struct HomeView: View {
                         )
                         .onTapGesture { selectedWeekday = day }
                     
-                    if !dayCategories.isEmpty {
-                        HStack(spacing: 2) {
+                    // Always reserve space for category indicators
+                    HStack(spacing: 2) {
+                        if !dayCategories.isEmpty {
                             ForEach(dayCategories.prefix(3), id: \.self) { category in
                                 Circle()
                                     .fill(category.color)
@@ -138,8 +139,16 @@ struct HomeView: View {
                                     .font(.caption2)
                                     .foregroundStyle(.secondary)
                             }
+                        } else {
+                            // Reserve space with invisible circles to maintain alignment
+                            ForEach(0..<3, id: \.self) { _ in
+                                Circle()
+                                    .fill(Color.clear)
+                                    .frame(width: 6, height: 6)
+                            }
                         }
                     }
+                    .frame(height: 8) // Fixed height to maintain consistency
                 }
             }
         }
