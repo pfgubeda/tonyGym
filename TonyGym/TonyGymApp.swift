@@ -1,23 +1,12 @@
-//
-//  TonyGymApp.swift
-//  TonyGym
-//
-//  Created by Pablo Fernandez Gonzalez on 20/10/25.
-//
-
 import SwiftUI
 import SwiftData
 
 @main
 struct TonyGymApp: App {
     var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
         do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            let container = try ModelContainer(for: Exercise.self, ImageAttachment.self, Routine.self, RoutineEntry.self, DayPlan.self)
+            return container
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }
@@ -25,8 +14,10 @@ struct TonyGymApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
         }
         .modelContainer(sharedModelContainer)
     }
 }
+
+
