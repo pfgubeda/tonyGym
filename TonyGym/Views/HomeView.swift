@@ -429,7 +429,7 @@ struct HomeView: View {
     
     private func entriesForWeekday(_ weekday: Weekday) -> [RoutineEntry] {
         guard let routine = selectedRoutine else { return [] }
-        return routine.entries.filter { $0.weekday == weekday }
+        return routine.entries.filter { $0.weekday == weekday }.sorted { $0.order < $1.order }
     }
 
     private static func todayWeekday() -> Weekday {
