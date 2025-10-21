@@ -218,19 +218,26 @@ struct HomeView: View {
                     ForEach(Array(entriesForSelectedDay().enumerated()), id: \.element.persistentModelID) { _, entry in
                         let ex = entry.exercise
                         HStack(spacing: 12) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack(spacing: 6) {
-                                Text(ex?.title ?? "(Eliminado)")
-                                    .font(.body)
-                                if let ex {
-                                    Text(ex.category.displayName)
-                                        .font(.caption2)
-                                        .padding(.horizontal, 6)
-                                        .padding(.vertical, 2)
-                                        .background(Capsule().fill(ex.category.color.opacity(0.2)))
-                                        .foregroundStyle(ex.category.color)
+                            // Drag handle icon
+                            Image(systemName: "line.3.horizontal")
+                                .foregroundStyle(.secondary)
+                                .font(.caption)
+                                .frame(width: 20, height: 20)
+                                .contentShape(Rectangle())
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack(spacing: 6) {
+                                    Text(ex?.title ?? "(Eliminado)")
+                                        .font(.body)
+                                    if let ex {
+                                        Text(ex.category.displayName)
+                                            .font(.caption2)
+                                            .padding(.horizontal, 6)
+                                            .padding(.vertical, 2)
+                                            .background(Capsule().fill(ex.category.color.opacity(0.2)))
+                                            .foregroundStyle(ex.category.color)
+                                    }
                                 }
-                            }
                                 if let ex, !ex.details.isEmpty {
                                     Text(ex.details)
                                         .font(.caption)
@@ -238,29 +245,35 @@ struct HomeView: View {
                                         .foregroundStyle(.secondary)
                                 }
                             }
+                            
                             Spacer()
+                            
                             HStack(spacing: 8) {
                                 Button {
                                     if let ex { adjustWeight(exercise: ex, delta: -2.5) }
                                 } label: {
-                                    Image(systemName: "minus.circle.fill").foregroundStyle(.secondary)
+                                    Image(systemName: "minus.circle.fill")
+                                        .foregroundStyle(.secondary)
                                 }
                                 .buttonStyle(.plain)
-                            Text(weightString(ex?.defaultWeightKg ?? 0))
-                                .monospacedDigit()
-                                .frame(minWidth: 72, alignment: .trailing)
-                                .foregroundStyle(.secondary)
-                                .onTapGesture {
-                                    if let ex = ex {
-                                        selectedExerciseForWeight = ex
-                                        customWeight = ex.defaultWeightKg
-                                        showingWeightEditor = true
+                                
+                                Text(weightString(ex?.defaultWeightKg ?? 0))
+                                    .monospacedDigit()
+                                    .frame(minWidth: 72, alignment: .center)
+                                    .foregroundStyle(.secondary)
+                                    .onTapGesture {
+                                        if let ex = ex {
+                                            selectedExerciseForWeight = ex
+                                            customWeight = ex.defaultWeightKg
+                                            showingWeightEditor = true
+                                        }
                                     }
-                                }
+                                
                                 Button {
                                     if let ex { adjustWeight(exercise: ex, delta: 2.5) }
                                 } label: {
                                     Image(systemName: "plus.circle.fill")
+                                        .foregroundStyle(.secondary)
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -279,6 +292,7 @@ struct HomeView: View {
                             Button(role: .destructive) { deleteEntry(entry) } label: { Label("Eliminar", systemImage: "trash") }
                         }
                     }
+                    .onMove(perform: moveEntries)
                 }
                 .listStyle(.plain)
             }
@@ -382,6 +396,27 @@ struct HomeView: View {
             routine.entries.remove(at: idx)
         }
         context.delete(entry)
+        routine.updatedAt = .now
+        
+        // Update widget
+        updateWidgetSnapshot()
+    }
+    
+    private func moveEntries(from source: IndexSet, to destination: Int) {
+        guard let routine = selectedRoutine else { return }
+        
+        // Get the entries for the selected day
+        let dayEntries = entriesForSelectedDay()
+        
+        // Move the entries in the array
+        var reorderedEntries = dayEntries
+        reorderedEntries.move(fromOffsets: source, toOffset: destination)
+        
+        // Update the order values for all entries
+        for (index, entry) in reorderedEntries.enumerated() {
+            entry.order = index
+        }
+        
         routine.updatedAt = .now
         
         // Update widget
