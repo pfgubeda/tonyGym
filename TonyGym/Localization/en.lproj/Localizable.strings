@@ -145,6 +145,9 @@
 "welcome.features.tracking" = "• Track your progress over time";
 "welcome.features.widgets" = "• Use widgets to see your routine";
 
+/* Widget */
+"widget.more.exercises" = "+%d more";
+
 /* Units */
 "unit.kg" = "kg";
 "unit.lb" = "lb";

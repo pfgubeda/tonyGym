@@ -89,53 +89,86 @@ struct TodayWorkoutWidgetEntryView : View {
     var entry: Provider.Entry
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            // Compact header - all in one line
-            HStack {
-                Text(entry.snapshot.routineName)
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .lineLimit(1)
-                Spacer()
-                Text(weekdayShort(entry.snapshot.weekday))
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
+        GeometryReader { geometry in
+            let maxExercises = calculateMaxExercises(for: geometry.size)
             
-            if entry.snapshot.items.isEmpty {
-                // Rest day - compact
-                HStack(spacing: 4) {
-                    Image(systemName: "bed.double.fill")
-                        .font(.caption)
-                        .foregroundStyle(.orange)
-                    Text("Descanso")
-                        .font(.caption)
-                        .foregroundStyle(.orange)
+            VStack(alignment: .leading, spacing: 2) {
+                // Compact header - all in one line
+                HStack {
+                    Text(entry.snapshot.routineName)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .lineLimit(1)
+                    Spacer()
+                    Text(weekdayShort(entry.snapshot.weekday))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
                 }
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.vertical, 8)
-            } else {
-                // Show ALL exercises with ultra-compact layout
-                ForEach(entry.snapshot.items, id: \.title) { item in
+                
+                if entry.snapshot.items.isEmpty {
+                    // Rest day - compact
                     HStack(spacing: 4) {
-                        Circle()
-                            .fill(categoryColor(item.categoryRaw))
-                            .frame(width: 4, height: 4)
-                        Text(item.title)
-                            .font(.caption2)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                        Spacer()
-                        Text(formatWeight(item.weightKg))
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                            .monospacedDigit()
+                        Image(systemName: "bed.double.fill")
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                        Text("Descanso")
+                            .font(.caption)
+                            .foregroundStyle(.orange)
                     }
-                    .frame(height: 16) // Fixed height for maximum density
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, 8)
+                } else {
+                    // Show exercises with dynamic count based on widget size
+                    VStack(spacing: 2) {
+                        ForEach(Array(entry.snapshot.items.prefix(maxExercises).enumerated()), id: \.offset) { index, item in
+                            HStack(spacing: 4) {
+                                Circle()
+                                    .fill(categoryColor(item.categoryRaw))
+                                    .frame(width: 4, height: 4)
+                                Text(item.title)
+                                    .font(.caption2)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.8)
+                                Spacer()
+                                Text(formatWeight(item.weightKg))
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                                    .monospacedDigit()
+                            }
+                            .frame(height: 16) // Fixed height for maximum density
+                        }
+                        
+                        // Show indicator if there are more exercises
+                        if entry.snapshot.items.count > maxExercises {
+                            HStack {
+                                Spacer()
+                                Text("+\(entry.snapshot.items.count - maxExercises) más")
+                                    .font(.caption2)
+                                    .foregroundStyle(.tertiary)
+                                Spacer()
+                            }
+                            .frame(height: 16)
+                        }
+                    }
                 }
             }
+            .padding(6)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
-        .padding(6)
+    }
+    
+    private func calculateMaxExercises(for size: CGSize) -> Int {
+        // Calculate available height after header and padding
+        let headerHeight: CGFloat = 20 // Approximate header height
+        let padding: CGFloat = 12 // Top and bottom padding
+        let availableHeight = size.height - headerHeight - padding
+        
+        // Calculate how many exercises can fit (each exercise is 16pt + 2pt spacing = 18pt)
+        let exerciseHeight: CGFloat = 18
+        let maxFit = Int(availableHeight / exerciseHeight)
+        
+        // Ensure we don't exceed reasonable limits
+        return min(maxFit, 12) // Cap at 12 exercises maximum
     }
 
     private func weekdayShort(_ raw: Int) -> String {
