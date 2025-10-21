@@ -5,7 +5,7 @@ import Charts
 struct StatisticsView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \WorkoutLog.date, order: .reverse) private var workoutLogs: [WorkoutLog]
-    @Query private var exercises: [Exercise]
+    @Query(sort: \Exercise.title) private var exercises: [Exercise]
     
     @State private var selectedExercise: Exercise?
     @State private var selectedCategory: ExerciseCategory?
