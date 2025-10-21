@@ -83,6 +83,10 @@
 "exercise.filter.core" = "Core";
 "exercise.filter.otros" = "Otros";
 
+"exercise.no.exercises.title" = "Aún no hay ejercicios";
+"exercise.no.exercises.message" = "Para crear tus rutinas de entrenamiento, primero necesitas agregar algunos ejercicios. Toca el botón + para agregar tu primer ejercicio.";
+"exercise.no.exercises.add.first" = "Agregar tu primer ejercicio";
+
 /* Statistics */
 "stats.title" = "Progreso";
 "stats.subtitle" = "Ve la evolución de cada ejercicio";
@@ -125,6 +129,21 @@
 "common.ok" = "OK";
 "common.yes" = "Sí";
 "common.no" = "No";
+
+/* Welcome Screen */
+"welcome.title" = "¡Bienvenido a TonyGym!";
+"welcome.subtitle" = "Comienza creando tu primera rutina de ejercicios";
+"welcome.message" = "Crea tu primera rutina para comenzar. Dale un nombre y podrás agregar ejercicios para cada día de la semana.";
+"welcome.routine.name" = "Nombre de la rutina";
+"welcome.routine.name.placeholder" = "Ej: Mi Rutina de Gym";
+"welcome.create.routine" = "Crear Rutina";
+"welcome.import.routine" = "Importar Rutina";
+"welcome.later" = "Más tarde";
+"welcome.features.title" = "Lo que puedes hacer:";
+"welcome.features.routines" = "• Crear múltiples rutinas de entrenamiento";
+"welcome.features.exercises" = "• Agregar ejercicios a cada día";
+"welcome.features.tracking" = "• Seguir tu progreso en el tiempo";
+"welcome.features.widgets" = "• Usar widgets para ver tu rutina";
 
 /* Units */
 "unit.kg" = "kg";

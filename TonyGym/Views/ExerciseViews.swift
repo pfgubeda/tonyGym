@@ -19,27 +19,64 @@ struct ExerciseListView: View {
                 }
                 .padding(.horizontal)
             }
-            List {
-                ForEach(filteredExercises()) { ex in
-                    NavigationLink(destination: ExerciseEditorView(exercise: ex)) {
-                        VStack(alignment: .leading) {
-                            HStack {
-                                Text(ex.title).font(.headline)
-                                Spacer()
-                                Text(ex.category.displayName)
-                                    .font(.caption)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Capsule().fill(ex.category.color.opacity(0.2)))
-                                    .foregroundStyle(ex.category.color)
-                            }
-                            if !ex.details.isEmpty {
-                                Text(ex.details).font(.subheadline).lineLimit(1).foregroundStyle(.secondary)
+            if filteredExercises().isEmpty {
+                // Empty state when no exercises
+                VStack(spacing: 24) {
+                    Spacer()
+                    
+                    VStack(spacing: 16) {
+                        Image(systemName: "dumbbell")
+                            .font(.system(size: 60))
+                            .foregroundStyle(.secondary)
+                        
+                        VStack(spacing: 8) {
+                            Text(NSLocalizedString("exercise.no.exercises.title", comment: "No exercises title"))
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                            
+                            Text(NSLocalizedString("exercise.no.exercises.message", comment: "No exercises message"))
+                                .font(.body)
+                                .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal)
+                        }
+                    }
+                    
+                    Button(action: { showingAdd = true }) {
+                        Text(NSLocalizedString("exercise.no.exercises.add.first", comment: "Add first exercise button"))
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 12)
+                            .background(.blue)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    
+                    Spacer()
+                }
+            } else {
+                List {
+                    ForEach(filteredExercises()) { ex in
+                        NavigationLink(destination: ExerciseEditorView(exercise: ex)) {
+                            VStack(alignment: .leading) {
+                                HStack {
+                                    Text(ex.title).font(.headline)
+                                    Spacer()
+                                    Text(ex.category.displayName)
+                                        .font(.caption)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(Capsule().fill(ex.category.color.opacity(0.2)))
+                                        .foregroundStyle(ex.category.color)
+                                }
+                                if !ex.details.isEmpty {
+                                    Text(ex.details).font(.subheadline).lineLimit(1).foregroundStyle(.secondary)
+                                }
                             }
                         }
                     }
+                    .onDelete(perform: deleteItems)
                 }
-                .onDelete(perform: deleteItems)
             }
         }
         .navigationTitle(NSLocalizedString("exercise.title", comment: "Exercises title"))

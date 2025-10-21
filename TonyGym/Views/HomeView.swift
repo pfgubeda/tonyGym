@@ -30,6 +30,8 @@ struct HomeView: View {
     @State private var customWeight: Double = 0
     @State private var weightChangeTimer: Timer?
     @State private var pendingWeightChange: (exercise: Exercise, weight: Double)?
+    @State private var showingWelcomeDialog: Bool = false
+    @State private var newRoutineName: String = ""
 
     var body: some View {
         NavigationStack {
@@ -60,6 +62,20 @@ struct HomeView: View {
                 editRoutineNameSheet
             }
             .sheet(isPresented: $showingExport) { exportSheet }
+            .sheet(isPresented: $showingWelcomeDialog) {
+                WelcomeView(
+                    routineName: $newRoutineName,
+                    onCreateRoutine: createFirstRoutine,
+                    onImportRoutine: {
+                        showingWelcomeDialog = false
+                        showingImport = true
+                    },
+                    onDismiss: {
+                        newRoutineName = ""
+                        showingWelcomeDialog = false
+                    }
+                )
+            }
         }
     }
 
@@ -431,6 +447,22 @@ struct HomeView: View {
         // Update widget
         updateWidgetSnapshot()
     }
+    
+    private func createFirstRoutine() {
+        let routineName = newRoutineName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !routineName.isEmpty {
+            let routine = Routine(name: routineName)
+            context.insert(routine)
+            selectedRoutine = routine
+            newRoutineName = ""
+            
+            // Update widget
+            updateWidgetSnapshot()
+            
+            // Dismiss the welcome modal
+            showingWelcomeDialog = false
+        }
+    }
 
     private func deleteSelectedRoutine() {
         guard let routine = selectedRoutine else { return }
@@ -442,7 +474,14 @@ struct HomeView: View {
     }
 
     private func selectDefaultRoutineIfNeeded() {
-        if selectedRoutine == nil { selectedRoutine = routines.first }
+        if selectedRoutine == nil { 
+            if routines.isEmpty {
+                // Show welcome dialog for new users
+                showingWelcomeDialog = true
+            } else {
+                selectedRoutine = routines.first
+            }
+        }
         // Update widget when routine is selected
         updateWidgetSnapshot()
     }
@@ -835,3 +874,166 @@ private extension Data {
         return url
     }
 }
+
+private struct AppIconView: View {
+    var body: some View {
+        if let uiImage = UIApplication.shared.appIcon {
+            Image(uiImage: uiImage)
+                .resizable()
+                .scaledToFit()
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+        } else {
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.secondary.opacity(0.1))
+                .overlay(
+                    Image(systemName: "app.fill")
+                        .foregroundStyle(.secondary)
+                )
+        }
+    }
+}
+
+private extension UIApplication {
+    var appIcon: UIImage? {
+        // Check for alternate icon first
+        if let altName = alternateIconName,
+           let altIcons = Bundle.main.infoDictionary?["CFBundleIcons"] as? [String: Any],
+           let alt = altIcons["CFBundleAlternateIcons"] as? [String: Any],
+           let icon = alt[altName] as? [String: Any],
+           let files = icon["CFBundleIconFiles"] as? [String],
+           let last = files.last,
+           let image = UIImage(named: last) {
+            return image
+        }
+
+        // Fallback to primary icon
+        guard
+            let icons = Bundle.main.infoDictionary?["CFBundleIcons"] as? [String: Any],
+            let primary = icons["CFBundlePrimaryIcon"] as? [String: Any],
+            let files = primary["CFBundleIconFiles"] as? [String],
+            let last = files.last
+        else {
+            return nil
+        }
+        return UIImage(named: last)
+    }
+}
+
+private struct WelcomeView: View {
+    @Binding var routineName: String
+    let onCreateRoutine: () -> Void
+    let onImportRoutine: () -> Void
+    let onDismiss: () -> Void
+    
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 32) {
+                Spacer()
+                
+                // App Icon/Logo area
+                VStack(spacing: 16) {
+                    AppIconView()
+                        .frame(width: 80, height: 80)
+                    
+                    VStack(spacing: 8) {
+                        Text(NSLocalizedString("welcome.title", comment: "Welcome title"))
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                            .multilineTextAlignment(.center)
+                        
+                        Text(NSLocalizedString("welcome.subtitle", comment: "Welcome subtitle"))
+                            .font(.title3)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                }
+                
+                // Main content
+                VStack(spacing: 24) {
+                    Text(NSLocalizedString("welcome.message", comment: "Welcome message"))
+                        .font(.body)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                    
+                    // Features list
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(NSLocalizedString("welcome.features.title", comment: "Features title"))
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                        
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(NSLocalizedString("welcome.features.routines", comment: "Feature: routines"))
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                            
+                            Text(NSLocalizedString("welcome.features.exercises", comment: "Feature: exercises"))
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                            
+                            Text(NSLocalizedString("welcome.features.tracking", comment: "Feature: tracking"))
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                            
+                            Text(NSLocalizedString("welcome.features.widgets", comment: "Feature: widgets"))
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(.horizontal)
+                    
+                    // Routine name input
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(NSLocalizedString("welcome.routine.name", comment: "Routine name label"))
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                        
+                        TextField(
+                            NSLocalizedString("welcome.routine.name.placeholder", comment: "Routine name placeholder"),
+                            text: $routineName
+                        )
+                        .textFieldStyle(.roundedBorder)
+                        .font(.body)
+                    }
+                    .padding(.horizontal)
+                }
+                
+                Spacer()
+                
+                // Action buttons
+                VStack(spacing: 12) {
+                    Button(action: onCreateRoutine) {
+                        Text(NSLocalizedString("welcome.create.routine", comment: "Create routine button"))
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(routineName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .gray : .blue)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .disabled(routineName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    
+                    Button(action: onImportRoutine) {
+                        Text(NSLocalizedString("welcome.import.routine", comment: "Import routine button"))
+                            .font(.headline)
+                            .foregroundStyle(.blue)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(.blue.opacity(0.1))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    
+                    Button(action: onDismiss) {
+                        Text(NSLocalizedString("welcome.later", comment: "Later button"))
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 32)
+            }
+            .navigationBarHidden(true)
+        }
+    }
+}
+
