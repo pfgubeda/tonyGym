@@ -103,31 +103,81 @@ struct LockScreenWidgetView: View {
                 .background(.quaternary.opacity(0.3))
                 .clipShape(Capsule())
             } else {
-                // Category names - horizontal layout with modern styling
-                let uniqueCategories = Set(entry.snapshot.items.map { $0.categoryRaw })
-                let categoryNames = Array(uniqueCategories).sorted().map { categoryName($0) }
+                // Most frequent categories - multi-line layout with modern styling
+                let categoryCounts = Dictionary(grouping: entry.snapshot.items, by: { $0.categoryRaw })
+                    .mapValues { $0.count }
+                    .sorted { $0.value > $1.value }
                 
-                HStack(spacing: 3) {
-                    ForEach(categoryNames.prefix(4), id: \.self) { name in
-                        Text(name)
-                            .font(.caption2)
-                            .fontWeight(.medium)
-                            .foregroundStyle(.secondary)
+                // Show more categories with multi-line layout
+                let maxCategories = min(categoryCounts.count, 4) // Show up to 4 categories
+                let mostFrequentCategories = Array(categoryCounts.prefix(maxCategories))
+                
+                VStack(spacing: 3) {
+                    // First line - up to 2 categories
+                    HStack(spacing: 3) {
+                        ForEach(Array(mostFrequentCategories.prefix(2).enumerated()), id: \.offset) { index, category in
+                            let categoryName = categoryName(category.key)
+                            let count = category.value
+                            
+                            HStack(spacing: 2) {
+                                Text(categoryName)
+                                    .font(.caption2)
+                                    .fontWeight(.medium)
+                                    .foregroundStyle(.secondary)
+                                
+                                // Show count if there are multiple exercises in this category
+                                if count > 1 {
+                                    Text("\(count)")
+                                        .font(.caption2)
+                                        .fontWeight(.bold)
+                                        .foregroundStyle(.primary)
+                                }
+                            }
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(.quaternary.opacity(0.2))
                             .clipShape(Capsule())
+                        }
                     }
                     
-                    // Show count if more than 4 categories
-                    if categoryNames.count > 4 {
-                        Text("+\(categoryNames.count - 4)")
-                            .font(.caption2)
-                            .foregroundStyle(.tertiary)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(.quaternary.opacity(0.1))
-                            .clipShape(Capsule())
+                    // Second line - remaining categories (if any)
+                    if mostFrequentCategories.count > 2 {
+                        HStack(spacing: 3) {
+                            ForEach(Array(mostFrequentCategories.dropFirst(2).enumerated()), id: \.offset) { index, category in
+                                let categoryName = categoryName(category.key)
+                                let count = category.value
+                                
+                                HStack(spacing: 2) {
+                                    Text(categoryName)
+                                        .font(.caption2)
+                                        .fontWeight(.medium)
+                                        .foregroundStyle(.secondary)
+                                    
+                                    // Show count if there are multiple exercises in this category
+                                    if count > 1 {
+                                        Text("\(count)")
+                                            .font(.caption2)
+                                            .fontWeight(.bold)
+                                            .foregroundStyle(.primary)
+                                    }
+                                }
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(.quaternary.opacity(0.2))
+                                .clipShape(Capsule())
+                            }
+                            
+                            // Show total count if there are more categories than we can display
+                            if categoryCounts.count > 4 {
+                                Text("+\(categoryCounts.count - 4)")
+                                    .font(.caption2)
+                                    .foregroundStyle(.tertiary)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(.quaternary.opacity(0.1))
+                                    .clipShape(Capsule())
+                            }
+                        }
                     }
                 }
             }
@@ -205,9 +255,13 @@ struct LockScreenWidget: Widget {
         routineName: "Rutina de Martes",
         items: [
             WidgetRoutineItem(title: "Sentadilla", categoryRaw: 1, weightKg: 60),
+            WidgetRoutineItem(title: "Zancadas", categoryRaw: 1, weightKg: 40),
             WidgetRoutineItem(title: "Press banca", categoryRaw: 2, weightKg: 40),
+            WidgetRoutineItem(title: "Press inclinado", categoryRaw: 2, weightKg: 35),
             WidgetRoutineItem(title: "Peso muerto", categoryRaw: 3, weightKg: 80),
-            WidgetRoutineItem(title: "Press militar", categoryRaw: 4, weightKg: 30)
+            WidgetRoutineItem(title: "Remo con barra", categoryRaw: 3, weightKg: 50),
+            WidgetRoutineItem(title: "Press militar", categoryRaw: 4, weightKg: 30),
+            WidgetRoutineItem(title: "Elevaciones laterales", categoryRaw: 4, weightKg: 15)
         ]
     ))
 })
