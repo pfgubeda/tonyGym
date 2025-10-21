@@ -18,6 +18,8 @@ struct HomeView: View {
     @State private var showingImport: Bool = false
     @State private var importData: Data?
     @State private var showingExport: Bool = false
+    @State private var importError: String? = nil
+    @State private var showingImportError: Bool = false
     @State private var detailExercise: Exercise?
     @State private var editingDayTitle: Bool = false
     @State private var dayTitleDraft: String = ""
@@ -43,6 +45,11 @@ struct HomeView: View {
             .onAppear(perform: selectDefaultRoutineIfNeeded)
             .fileImporter(isPresented: $showingImport, allowedContentTypes: [UTType.json]) { result in
                 handleImport(result: result)
+            }
+            .alert("Import Error", isPresented: $showingImportError) {
+                Button("OK") { }
+            } message: {
+                Text(importError ?? "Unknown error")
             }
             .sheet(isPresented: $showingExercisePicker) {
                 ExercisePickerView(exercises: exercises) { exercise in
@@ -513,15 +520,30 @@ struct HomeView: View {
     private func handleImport(result: Result<URL, any Error>) {
         switch result {
         case .success(let url):
+            // Begin security-scoped access if available (required on device for Files/iCloud locations)
+            let needsSecurityAccess = url.startAccessingSecurityScopedResource()
+            defer {
+                if needsSecurityAccess {
+                    url.stopAccessingSecurityScopedResource()
+                }
+            }
+
             do {
                 let data = try Data(contentsOf: url)
+                print("Import: Read \(data.count) bytes from file")
                 let routine = try ExportImportManager.importRoutine(data: data, context: context)
+                print("Import: Successfully imported routine '\(routine.name)' with \(routine.entries.count) entries")
                 selectedRoutine = routine
+                updateWidgetSnapshot()
             } catch {
                 print("Import failed: \(error)")
+                importError = "Import failed: \(error.localizedDescription)"
+                showingImportError = true
             }
         case .failure(let err):
             print("Importer error: \(err)")
+            importError = "File selection failed: \(err.localizedDescription)"
+            showingImportError = true
         }
     }
 }
@@ -680,50 +702,93 @@ private enum ExportImportManager {
     }
 
     static func exportRoutine(routine: Routine) -> Data? {
-        var exerciseSet: Set<UUID> = []
+        var exerciseTitleMap: [String: UUID] = [:] // Map exercise title to synthetic ID for deduplication
         var exportExercises: [ExportRoutinePayload.ExportExercise] = []
+        
+        print("Export: Starting export for routine '\(routine.name)' with \(routine.entries.count) entries")
+        
+        // First pass: collect all unique exercises by title
         for entry in routine.entries {
             if let ex = entry.exercise {
-                // Use synthetic IDs in export; persistent IDs are not portable
-                let uuid = UUID()
-                if !exerciseSet.contains(uuid) {
-                    exerciseSet.insert(uuid)
+                print("Export: Processing entry with exercise '\(ex.title)'")
+                
+                // Check if we already have this exercise by title
+                if exerciseTitleMap[ex.title] == nil {
+                    // Use synthetic IDs in export; persistent IDs are not portable
+                    let syntheticId = UUID()
+                    exerciseTitleMap[ex.title] = syntheticId
                     exportExercises.append(.init(
-                        id: uuid,
+                        id: syntheticId,
                         title: ex.title,
                         details: ex.details,
                         defaultWeightKg: ex.defaultWeightKg,
                         categoryRaw: ex.categoryRaw
                     ))
+                    print("Export: Added new exercise '\(ex.title)' with synthetic ID \(syntheticId)")
+                } else {
+                    print("Export: Reusing existing exercise '\(ex.title)' with synthetic ID \(exerciseTitleMap[ex.title]!)")
                 }
+            } else {
+                print("Export: Entry has no exercise")
             }
         }
+        
+        print("Export: Created \(exportExercises.count) unique exercises")
+        print("Export: Exercise title mapping: \(exerciseTitleMap)")
+        
         let entries: [ExportRoutinePayload.ExportEntry] = routine.entries.map { e in
-            return .init(weekday: e.weekday.rawValue, exerciseId: nil, note: e.note, order: e.order)
+            let exerciseId = e.exercise.flatMap { exerciseTitleMap[$0.title] }
+            print("Export: Entry for weekday \(e.weekday.rawValue) with exercise '\(e.exercise?.title ?? "nil")' -> exercise ID: \(exerciseId?.uuidString ?? "nil")")
+            return .init(weekday: e.weekday.rawValue, exerciseId: exerciseId, note: e.note, order: e.order)
         }
         let payload = ExportRoutinePayload(name: routine.name, exercises: exportExercises, entries: entries)
         return try? JSONEncoder().encode(payload)
     }
 
     static func importRoutine(data: Data, context: ModelContext) throws -> Routine {
+        print("Import: Starting import process...")
         let payload = try JSONDecoder().decode(ExportRoutinePayload.self, from: data)
+        print("Import: Decoded payload - name: '\(payload.name)', exercises: \(payload.exercises.count), entries: \(payload.entries.count)")
+        
         var importedExercisesById: [UUID: Exercise] = [:]
+        
+        // Get existing exercises to avoid duplicates
+        let existingExercises = try context.fetch(FetchDescriptor<Exercise>())
+        var existingExercisesByTitle: [String: Exercise] = [:]
+        for exercise in existingExercises {
+            existingExercisesByTitle[exercise.title] = exercise
+        }
+        
+        // First, create or find exercises
         for ex in payload.exercises {
-            let exercise = Exercise(title: ex.title, details: ex.details, defaultWeightKg: ex.defaultWeightKg, category: ExerciseCategory(rawValue: ex.categoryRaw) ?? .otros, images: [])
-            context.insert(exercise)
+            let exercise: Exercise
+            if let existingExercise = existingExercisesByTitle[ex.title] {
+                // Use existing exercise if it already exists
+                exercise = existingExercise
+                print("Import: Using existing exercise '\(ex.title)'")
+            } else {
+                // Create new exercise if it doesn't exist
+                exercise = Exercise(title: ex.title, details: ex.details, defaultWeightKg: ex.defaultWeightKg, category: ExerciseCategory(rawValue: ex.categoryRaw) ?? .otros, images: [])
+                context.insert(exercise)
+                print("Import: Created new exercise '\(ex.title)' with ID \(ex.id)")
+            }
             importedExercisesById[ex.id] = exercise
         }
+        
         let routine = Routine(name: payload.name)
-        // Map entries to exercises by index if possible (fallback), since IDs are synthetic
-        let sortedExercises = payload.exercises
+        print("Import: Created routine '\(payload.name)'")
+        
+        // Then, create entries with proper exercise relationships
         for entry in payload.entries.sorted(by: { $0.order < $1.order }) {
             let exercise = entry.exerciseId.flatMap { importedExercisesById[$0] }
-                ?? (sortedExercises.indices.contains(entry.order) ? importedExercisesById[sortedExercises[entry.order].id] : nil)
             let newEntry = RoutineEntry(weekday: Weekday(rawValue: entry.weekday) ?? .monday, exercise: exercise, note: entry.note, order: entry.order)
             newEntry.routine = routine
             routine.entries.append(newEntry)
+            print("Import: Created entry for weekday \(entry.weekday), order \(entry.order), exercise: \(exercise?.title ?? "nil")")
         }
+        
         context.insert(routine)
+        print("Import: Inserted routine into context")
         return routine
     }
 }
@@ -735,5 +800,3 @@ private extension Data {
         return url
     }
 }
-
-
