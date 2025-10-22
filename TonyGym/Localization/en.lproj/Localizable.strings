@@ -4,6 +4,7 @@
 "nav.today" = "Today";
 "nav.exercises" = "Exercises";
 "nav.progress" = "Progress";
+"nav.bilbo" = "BILBO";
 
 /* Home Screen */
 "home.routine.title" = "Routine";
@@ -153,3 +154,89 @@
 "unit.lb" = "lb";
 "unit.sets" = "sets";
 "unit.reps" = "reps";
+
+/* BILBO Method */
+"bilbo.title" = "BILBO Method";
+"bilbo.add.exercise" = "Add Exercise";
+"bilbo.instructions" = "Instructions";
+"bilbo.empty.title" = "No BILBO exercises yet";
+"bilbo.empty.subtitle" = "Start your BILBO method training";
+"bilbo.start.method" = "Start BILBO Method";
+"bilbo.method.description" = "The BILBO Method is a strength and hypertrophy training system that focuses on explosive sets of 15-50 repetitions with approximately 50% of your 1RM, always leaving 1-3 repetitions in reserve.";
+"bilbo.step.1.title" = "Select Exercises";
+"bilbo.step.1.description" = "Choose exercises suitable for explosive training like bench press, squats, dips, pull-ups, and military press.";
+"bilbo.step.2.title" = "Set Your 1RM";
+"bilbo.step.2.description" = "Enter your one-rep maximum for each exercise. The app will calculate 50% for your training weight.";
+"bilbo.step.3.title" = "Train Explosively";
+"bilbo.step.3.description" = "Perform explosive sets of 15-50 reps with 50% of your 1RM, always leaving 1-3 reps in reserve.";
+"bilbo.exercise.deleted" = "Deleted exercise";
+"bilbo.current.weight" = "Current weight";
+"bilbo.one.rm" = "1RM";
+"bilbo.percentage" = "Percentage";
+"bilbo.target.reps" = "Target reps";
+"bilbo.last.session" = "Last session";
+"bilbo.ready.progress" = "Ready to progress";
+"bilbo.ready.progress.detail" = "Ready to progress: next session try %@ kg";
+"bilbo.apply.next.weight" = "Apply";
+"bilbo.reminder.next.session" = "Next session, try %@ kg (≈ +2.5 kg)";
+"bilbo.select.exercise" = "Select Exercise for BILBO";
+"bilbo.exercise" = "Exercise";
+"bilbo.current.1rm" = "Current 1RM";
+"bilbo.session.data" = "Session Data";
+"bilbo.weight.used" = "Weight used";
+"bilbo.reps.completed" = "Reps completed";
+"bilbo.notes" = "Notes";
+"bilbo.notes.placeholder" = "Session notes";
+"bilbo.method.reminder" = "Method Reminder";
+"bilbo.reminder.title" = "Remember";
+"bilbo.reminder.text" = "Perform explosive repetitions with 50% of your 1RM, always leaving 1-3 repetitions in reserve. Do not reach muscle failure.";
+"bilbo.log.session" = "Log Session";
+"bilbo.save.session" = "Save Session";
+"bilbo.edit.1rm" = "Edit 1RM";
+"bilbo.new.1rm" = "New 1RM";
+"bilbo.new.weight" = "New training weight";
+"bilbo.new.weight.description" = "This will be your new training weight (50% of 1RM)";
+"bilbo.edit.1rm.title" = "Edit 1RM";
+"bilbo.instructions.title" = "BILBO Method Instructions";
+"bilbo.method.title" = "BILBO Method";
+"bilbo.method.subtitle" = "Explosive strength and hypertrophy training";
+"bilbo.instructions.what.title" = "What is the BILBO Method?";
+"bilbo.instructions.what.content" = "The BILBO Method is a strength and hypertrophy training system developed by Jesús Varela. It focuses on performing explosive sets of 15-50 repetitions with approximately 50% of your one-rep maximum (1RM), always leaving 1-3 repetitions in reserve.";
+"bilbo.instructions.how.title" = "How does it work?";
+"bilbo.instructions.how.content" = "1. Start with 50% of your 1RM for each exercise\n2. Perform explosive repetitions\n3. Complete 15-50 reps while maintaining 1-3 reps in reserve\n4. Progress by increasing weight when you exceed 15 reps";
+"bilbo.instructions.steps.title" = "Training Steps";
+"bilbo.instructions.steps.content" = "1. Warm up properly\n2. Load 50% of your 1RM\n3. Perform explosive repetitions\n4. Stop when you have 1-3 reps left in reserve\n5. Record your performance\n6. Progress weight if you completed more than 15 reps";
+"bilbo.instructions.benefits.title" = "Benefits";
+"bilbo.instructions.benefits.content" = "• Improved explosive power\n• Increased muscle mass\n• Enhanced strength endurance\n• Reduced injury risk\n• Better technique development\n• Sustainable progression";
+"bilbo.instructions.tips.title" = "Important Tips";
+"bilbo.instructions.tips.content" = "• Always maintain proper technique\n• Never reach muscle failure\n• Focus on explosive movement\n• Rest 48-72 hours between sessions\n• Progress gradually (2kg increases)\n• Listen to your body";
+
+/* 1RM Calculator */
+"bilbo.calculator.title" = "1RM Calculator";
+"bilbo.calculator.subtitle" = "Calculate your 1RM from workout history";
+"bilbo.calculator.history" = "Workout History";
+"bilbo.calculator.total.sessions" = "Total sessions";
+"bilbo.calculator.max.weight" = "Max weight";
+"bilbo.calculator.max.reps" = "Max reps";
+"bilbo.calculator.last.workout" = "Last workout";
+"bilbo.calculator.no.history" = "No workout history";
+"bilbo.calculator.no.history.message" = "This exercise has no recorded workout history. You'll need to enter your 1RM manually.";
+"bilbo.calculator.formula" = "Calculation Formula";
+"bilbo.calculator.result" = "Calculated 1RM";
+"bilbo.calculator.bilbo.weight" = "BILBO training weight";
+"bilbo.calculator.bilbo.explanation" = "This will be your training weight for the BILBO method (50% of 1RM)";
+"bilbo.calculator.use" = "Use this 1RM";
+"bilbo.calculator.formula.info" = "Formula Information";
+"bilbo.auto.calculated" = "Auto calculated 1RM";
+"bilbo.calculator.enter.manual" = "Enter manually";
+
+/* Manual 1RM Test */
+"bilbo.discover.1rm" = "Discover my 1RM";
+"bilbo.manual.1rm.title" = "Manual 1RM Test";
+"bilbo.manual.1rm.inputs" = "Inputs";
+"bilbo.manual.weight" = "Weight";
+"bilbo.manual.reps" = "Reps";
+"bilbo.manual.method" = "Method";
+"bilbo.manual.average" = "Average across formulas";
+"bilbo.manual.result" = "Result";
+"bilbo.manual.use" = "Use 1RM";

@@ -23,6 +23,13 @@ struct RootView: View {
             .tabItem {
                 Label(NSLocalizedString("nav.progress", comment: "Progress tab"), systemImage: "chart.line.uptrend.xyaxis")
             }
+            
+            NavigationStack {
+                BilboView()
+            }
+            .tabItem {
+                Label(NSLocalizedString("nav.bilbo", comment: "BILBO tab"), systemImage: "figure.strengthtraining.traditional")
+            }
         }
     }
 }

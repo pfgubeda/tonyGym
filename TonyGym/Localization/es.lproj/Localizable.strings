@@ -4,6 +4,7 @@
 "nav.today" = "Hoy";
 "nav.exercises" = "Ejercicios";
 "nav.progress" = "Progreso";
+"nav.bilbo" = "BILBO";
 
 /* Home Screen */
 "home.routine.title" = "Rutina";
@@ -153,3 +154,89 @@
 "unit.lb" = "lb";
 "unit.sets" = "series";
 "unit.reps" = "reps";
+
+/* Método BILBO */
+"bilbo.title" = "Método BILBO";
+"bilbo.add.exercise" = "Añadir Ejercicio";
+"bilbo.instructions" = "Instrucciones";
+"bilbo.empty.title" = "Aún no hay ejercicios BILBO";
+"bilbo.empty.subtitle" = "Comienza tu entrenamiento con el método BILBO";
+"bilbo.start.method" = "Comenzar Método BILBO";
+"bilbo.method.description" = "El Método BILBO es un sistema de entrenamiento de fuerza e hipertrofia que se enfoca en series explosivas de 15-50 repeticiones con aproximadamente el 50% de tu 1RM, dejando siempre entre 1-3 repeticiones en reserva.";
+"bilbo.step.1.title" = "Selecciona Ejercicios";
+"bilbo.step.1.description" = "Elige ejercicios adecuados para entrenamiento explosivo como press de banca, sentadillas, fondos, dominadas y press militar.";
+"bilbo.step.2.title" = "Establece tu 1RM";
+"bilbo.step.2.description" = "Ingresa tu repetición máxima para cada ejercicio. La app calculará el 50% para tu peso de entrenamiento.";
+"bilbo.step.3.title" = "Entrena Explosivamente";
+"bilbo.step.3.description" = "Realiza series explosivas de 15-50 repeticiones con el 50% de tu 1RM, dejando siempre entre 1-3 repeticiones en reserva.";
+"bilbo.exercise.deleted" = "Ejercicio eliminado";
+"bilbo.current.weight" = "Peso actual";
+"bilbo.one.rm" = "1RM";
+"bilbo.percentage" = "Porcentaje";
+"bilbo.target.reps" = "Repeticiones objetivo";
+"bilbo.last.session" = "Última sesión";
+"bilbo.ready.progress" = "Listo para progresar";
+"bilbo.ready.progress.detail" = "Listo para progresar: próxima sesión prueba %@ kg";
+"bilbo.apply.next.weight" = "Aplicar";
+"bilbo.reminder.next.session" = "Próxima sesión, prueba %@ kg (≈ +2,5 kg)";
+"bilbo.select.exercise" = "Seleccionar Ejercicio para BILBO";
+"bilbo.exercise" = "Ejercicio";
+"bilbo.current.1rm" = "1RM actual";
+"bilbo.session.data" = "Datos de la Sesión";
+"bilbo.weight.used" = "Peso utilizado";
+"bilbo.reps.completed" = "Repeticiones completadas";
+"bilbo.notes" = "Notas";
+"bilbo.notes.placeholder" = "Notas de la sesión";
+"bilbo.method.reminder" = "Recordatorio del Método";
+"bilbo.reminder.title" = "Recuerda";
+"bilbo.reminder.text" = "Realiza repeticiones explosivas con el 50% de tu 1RM, dejando siempre entre 1-3 repeticiones en reserva. No llegues al fallo muscular.";
+"bilbo.log.session" = "Registrar Sesión";
+"bilbo.save.session" = "Guardar Sesión";
+"bilbo.edit.1rm" = "Editar 1RM";
+"bilbo.new.1rm" = "Nuevo 1RM";
+"bilbo.new.weight" = "Nuevo peso de entrenamiento";
+"bilbo.new.weight.description" = "Este será tu nuevo peso de entrenamiento (50% del 1RM)";
+"bilbo.edit.1rm.title" = "Editar 1RM";
+"bilbo.instructions.title" = "Instrucciones del Método BILBO";
+"bilbo.method.title" = "Método BILBO";
+"bilbo.method.subtitle" = "Entrenamiento explosivo de fuerza e hipertrofia";
+"bilbo.instructions.what.title" = "¿Qué es el Método BILBO?";
+"bilbo.instructions.what.content" = "El Método BILBO es un sistema de entrenamiento de fuerza e hipertrofia desarrollado por Jesús Varela. Se enfoca en realizar series explosivas de 15-50 repeticiones con aproximadamente el 50% de tu repetición máxima (1RM), dejando siempre entre 1-3 repeticiones en reserva.";
+"bilbo.instructions.how.title" = "¿Cómo funciona?";
+"bilbo.instructions.how.content" = "1. Comienza con el 50% de tu 1RM para cada ejercicio\n2. Realiza repeticiones explosivas\n3. Completa 15-50 repeticiones manteniendo entre 1-3 repeticiones en reserva\n4. Progresa aumentando el peso cuando superes las 15 repeticiones";
+"bilbo.instructions.steps.title" = "Pasos del Entrenamiento";
+"bilbo.instructions.steps.content" = "1. Calienta adecuadamente\n2. Carga el 50% de tu 1RM\n3. Realiza repeticiones explosivas\n4. Para cuando tengas entre 1-3 repeticiones en reserva\n5. Registra tu rendimiento\n6. Progresa el peso si completaste más de 15 repeticiones";
+"bilbo.instructions.benefits.title" = "Beneficios";
+"bilbo.instructions.benefits.content" = "• Mejora de la potencia explosiva\n• Aumento de la masa muscular\n• Mejor resistencia de fuerza\n• Reducción del riesgo de lesiones\n• Mejor desarrollo de la técnica\n• Progresión sostenible";
+"bilbo.instructions.tips.title" = "Consejos Importantes";
+"bilbo.instructions.tips.content" = "• Mantén siempre una técnica adecuada\n• Nunca llegues al fallo muscular\n• Enfócate en el movimiento explosivo\n• Descansa 48-72 horas entre sesiones\n• Progresa gradualmente (aumentos de 2kg)\n• Escucha a tu cuerpo";
+
+/* Calculador de 1RM */
+"bilbo.calculator.title" = "Calculador de 1RM";
+"bilbo.calculator.subtitle" = "Calcula tu 1RM basándose en tu historial de entrenamientos";
+"bilbo.calculator.history" = "Historial de Entrenamientos";
+"bilbo.calculator.total.sessions" = "Sesiones totales";
+"bilbo.calculator.max.weight" = "Peso máximo";
+"bilbo.calculator.max.reps" = "Repeticiones máximas";
+"bilbo.calculator.last.workout" = "Último entrenamiento";
+"bilbo.calculator.no.history" = "Sin historial de entrenamientos";
+"bilbo.calculator.no.history.message" = "Este ejercicio no tiene historial de entrenamientos registrado. Necesitarás ingresar tu 1RM manualmente.";
+"bilbo.calculator.formula" = "Fórmula de Cálculo";
+"bilbo.calculator.result" = "1RM Calculado";
+"bilbo.calculator.bilbo.weight" = "Peso de entrenamiento BILBO";
+"bilbo.calculator.bilbo.explanation" = "Este será tu peso de entrenamiento para el método BILBO (50% del 1RM)";
+"bilbo.calculator.use" = "Usar este 1RM";
+"bilbo.calculator.formula.info" = "Información de Fórmulas";
+"bilbo.auto.calculated" = "1RM calculado automáticamente";
+"bilbo.calculator.enter.manual" = "Introducir manualmente";
+
+/* Test manual de 1RM */
+"bilbo.discover.1rm" = "Descubrir mi 1RM";
+"bilbo.manual.1rm.title" = "Test manual de 1RM";
+"bilbo.manual.1rm.inputs" = "Datos";
+"bilbo.manual.weight" = "Peso";
+"bilbo.manual.reps" = "Repeticiones";
+"bilbo.manual.method" = "Método";
+"bilbo.manual.average" = "Promedio entre fórmulas";
+"bilbo.manual.result" = "Resultado";
+"bilbo.manual.use" = "Usar 1RM";
