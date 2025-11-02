@@ -240,3 +240,30 @@
 "bilbo.manual.average" = "Average across formulas";
 "bilbo.manual.result" = "Result";
 "bilbo.manual.use" = "Use 1RM";
+
+/* BILBO Progress & History */
+"bilbo.progress" = "Progress";
+"bilbo.sessions" = "sessions";
+"bilbo.volume" = "Volume";
+"bilbo.history.title" = "Session History";
+"bilbo.history.empty.title" = "No sessions yet";
+"bilbo.history.empty.description" = "Start logging sessions to see your history here";
+"common.done" = "Done";
+
+/* BILBO Statistics */
+"bilbo.stats.title" = "Statistics";
+"bilbo.stats.subtitle" = "Performance Statistics";
+"bilbo.stats.summary" = "Summary";
+"bilbo.stats.total.sessions" = "Total Sessions";
+"bilbo.stats.avg.weight" = "Avg Weight";
+"bilbo.stats.max.weight" = "Max Weight";
+"bilbo.stats.total.volume" = "Total Volume";
+"bilbo.stats.improvement" = "Improvement";
+"bilbo.stats.weight.increase" = "Weight";
+"bilbo.stats.reps.increase" = "Reps";
+"bilbo.stats.volume" = "Volume";
+"bilbo.stats.percentage.improvement" = "%.1f%% total improvement";
+"bilbo.stats.weight.progression" = "Weight Progression";
+"bilbo.stats.reps.progression" = "Reps Progression";
+"bilbo.stats.volume.progression" = "Volume Progression";
+"bilbo.stats.no.data" = "No data available";

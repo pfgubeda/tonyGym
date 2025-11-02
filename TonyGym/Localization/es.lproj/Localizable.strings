@@ -240,3 +240,30 @@
 "bilbo.manual.average" = "Promedio entre fórmulas";
 "bilbo.manual.result" = "Resultado";
 "bilbo.manual.use" = "Usar 1RM";
+
+/* BILBO Progress & History */
+"bilbo.progress" = "Progreso";
+"bilbo.sessions" = "sesiones";
+"bilbo.volume" = "Volumen";
+"bilbo.history.title" = "Historial de Sesiones";
+"bilbo.history.empty.title" = "Aún no hay sesiones";
+"bilbo.history.empty.description" = "Comienza a registrar sesiones para ver tu historial aquí";
+"common.done" = "Hecho";
+
+/* BILBO Statistics */
+"bilbo.stats.title" = "Estadísticas";
+"bilbo.stats.subtitle" = "Estadísticas de Rendimiento";
+"bilbo.stats.summary" = "Resumen";
+"bilbo.stats.total.sessions" = "Sesiones Totales";
+"bilbo.stats.avg.weight" = "Peso Promedio";
+"bilbo.stats.max.weight" = "Peso Máximo";
+"bilbo.stats.total.volume" = "Volumen Total";
+"bilbo.stats.improvement" = "Mejora";
+"bilbo.stats.weight.increase" = "Peso";
+"bilbo.stats.reps.increase" = "Reps";
+"bilbo.stats.volume" = "Volumen";
+"bilbo.stats.percentage.improvement" = "%.1f%% mejora total";
+"bilbo.stats.weight.progression" = "Progresión de Peso";
+"bilbo.stats.reps.progression" = "Progresión de Reps";
+"bilbo.stats.volume.progression" = "Progresión de Volumen";
+"bilbo.stats.no.data" = "No hay datos disponibles";

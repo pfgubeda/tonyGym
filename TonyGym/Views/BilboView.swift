@@ -8,7 +8,6 @@ struct BilboView: View {
     
     @State private var showingExercisePicker = false
     @State private var selectedBilboExercise: BilboExercise?
-    @State private var showingSessionLog = false
     @State private var showingInstructions = false
     @State private var selectedExerciseForOneRM: Exercise?
     
@@ -42,7 +41,7 @@ struct BilboView: View {
                 }
             }
             .sheet(item: $selectedBilboExercise) { bilboExercise in
-                BilboSessionLogView(bilboExercise: bilboExercise)
+                BilboExerciseDetailView(bilboExercise: bilboExercise)
             }
             .sheet(isPresented: $showingInstructions) {
                 BilboInstructionsView()
@@ -289,6 +288,45 @@ struct BilboExerciseCard: View {
                             .fontWeight(.medium)
                     }
                 }
+                
+                // Progress Bar
+                if !bilboExercise.sessions.isEmpty {
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Text(NSLocalizedString("bilbo.progress", comment: "Progress"))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Text("\(bilboExercise.sessions.count) \(NSLocalizedString("bilbo.sessions", comment: "sessions"))")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        
+                        GeometryReader { geometry in
+                            ZStack(alignment: .leading) {
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color.gray.opacity(0.2))
+                                    .frame(height: 8)
+                                
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [.blue, .cyan],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .frame(width: geometry.size.width * min(1.0, max(0.0, bilboExercise.progressPercentage() / 100)), height: 8)
+                            }
+                        }
+                        .frame(height: 8)
+                        
+                        Text(String(format: "%.0f%%", bilboExercise.progressPercentage()))
+                            .font(.caption2)
+                            .foregroundStyle(.blue)
+                    }
+                    .padding(.top, 4)
+                }
             }
             .padding()
             .background(
@@ -438,7 +476,7 @@ struct BilboExercisePickerView: View {
 
 struct BilboSessionLogView: View {
     let bilboExercise: BilboExercise
-    @Environment(\.dismiss) private var dismiss
+    let onSave: (() -> Void)?
     @Environment(\.modelContext) private var context
     
     @State private var weightUsed: Double
@@ -446,9 +484,11 @@ struct BilboSessionLogView: View {
     @State private var notes: String = ""
     @State private var showingOneRMEditor = false
     @State private var newOneRM: Double
+    @State private var showingHistory = false
     
-    init(bilboExercise: BilboExercise) {
+    init(bilboExercise: BilboExercise, onSave: (() -> Void)? = nil) {
         self.bilboExercise = bilboExercise
+        self.onSave = onSave
         self._weightUsed = State(initialValue: OneRMCalculator.roundToIncrement(bilboExercise.currentWeight))
         self._newOneRM = State(initialValue: bilboExercise.oneRepMax)
     }
@@ -541,9 +581,16 @@ struct BilboSessionLogView: View {
                 }
             }
             .navigationTitle(NSLocalizedString("bilbo.log.session", comment: "Log session"))
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(NSLocalizedString("common.cancel", comment: "Cancel")) { dismiss() }
+                ToolbarItem(placement: .navigationBarLeading) {
+                    if !bilboExercise.sessions.isEmpty {
+                        Button {
+                            showingHistory = true
+                        } label: {
+                            Image(systemName: "clock.arrow.circlepath")
+                        }
+                    }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(NSLocalizedString("bilbo.save.session", comment: "Save session")) {
@@ -553,6 +600,9 @@ struct BilboSessionLogView: View {
             }
             .sheet(isPresented: $showingOneRMEditor) {
                 OneRMEditorView(bilboExercise: bilboExercise, newOneRM: $newOneRM)
+            }
+            .sheet(isPresented: $showingHistory) {
+                BilboSessionHistoryView(bilboExercise: bilboExercise)
             }
         }
     }
@@ -578,7 +628,8 @@ struct BilboSessionLogView: View {
             bilboExercise.currentWeight = bilboExercise.suggestedNextWeight()
         }
         
-        dismiss()
+        // Navigate back to stats view
+        onSave?()
     }
 }
 
@@ -1044,6 +1095,549 @@ struct OneRMCalculatorView: View {
         }
         
         calculatedOneRM = OneRMCalculator.findRecentReliableOneRM(from: workoutData, formula: selectedFormula)
+    }
+}
+
+// MARK: - Bilbo Session History View
+struct BilboSessionHistoryView: View {
+    let bilboExercise: BilboExercise
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var context
+    
+    private var sortedSessions: [BilboSession] {
+        bilboExercise.sessions.sorted { $0.date > $1.date }
+    }
+    
+    var body: some View {
+        NavigationStack {
+            List {
+                if sortedSessions.isEmpty {
+                    ContentUnavailableView(
+                        NSLocalizedString("bilbo.history.empty.title", comment: "No sessions yet"),
+                        systemImage: "calendar.badge.exclamationmark",
+                        description: Text(NSLocalizedString("bilbo.history.empty.description", comment: "Start logging sessions to see your history here"))
+                    )
+                } else {
+                    ForEach(sortedSessions) { session in
+                        SessionHistoryRow(session: session)
+                    }
+                    .onDelete(perform: deleteSessions)
+                }
+            }
+            .navigationTitle(bilboExercise.exercise?.title ?? NSLocalizedString("bilbo.history.title", comment: "Session History"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(NSLocalizedString("common.done", comment: "Done")) { dismiss() }
+                }
+            }
+        }
+    }
+    
+    private func deleteSessions(offsets: IndexSet) {
+        for index in offsets {
+            let session = sortedSessions[index]
+            context.delete(session)
+        }
+    }
+}
+
+struct SessionHistoryRow: View {
+    let session: BilboSession
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(session.date, style: .date)
+                    .font(.headline)
+                Spacer()
+                Text(session.date, style: .time)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            
+            HStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(NSLocalizedString("bilbo.weight.used", comment: "Weight used"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(String(format: "%.1f kg", session.weightUsed))
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                }
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(NSLocalizedString("bilbo.reps.completed", comment: "Reps completed"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text("\(session.repsCompleted)")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                }
+                
+                Spacer()
+                
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(NSLocalizedString("bilbo.volume", comment: "Volume"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(String(format: "%.0f kg", session.weightUsed * Double(session.repsCompleted)))
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.blue)
+                }
+            }
+            
+            if !session.notes.isEmpty {
+                HStack(alignment: .top, spacing: 4) {
+                    Image(systemName: "note.text")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(session.notes)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.top, 4)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+// MARK: - Bilbo Exercise Detail View (main container)
+struct BilboExerciseDetailView: View {
+    let bilboExercise: BilboExercise
+    @Environment(\.dismiss) private var dismiss
+    @State private var showingSessionLog = false
+    
+    var body: some View {
+        NavigationStack {
+            BilboStatsView(bilboExercise: bilboExercise, onLogSession: {
+                showingSessionLog = true
+            })
+            .navigationDestination(isPresented: $showingSessionLog) {
+                BilboSessionLogViewContainer(bilboExercise: bilboExercise, onSave: {
+                    showingSessionLog = false
+                })
+            }
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(NSLocalizedString("common.done", comment: "Done")) {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Container for session log that handles dismissal properly
+struct BilboSessionLogViewContainer: View {
+    let bilboExercise: BilboExercise
+    let onSave: () -> Void
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        BilboSessionLogView(bilboExercise: bilboExercise, onSave: onSave)
+    }
+}
+
+// MARK: - Bilbo Stats View
+struct BilboStatsView: View {
+    let bilboExercise: BilboExercise
+    var onLogSession: (() -> Void)?
+    
+    @State private var showingHistory = false
+    
+    private var stats: (totalSessions: Int, avgWeight: Double, maxWeight: Double, avgReps: Double, maxReps: Int, totalVolume: Double, sessionsByWeek: [Date: Int]) {
+        bilboExercise.getBilboStats()
+    }
+    
+    private var improvement: (weightIncrease: Double, repsIncrease: Int, volumeIncrease: Double, percentageImprovement: Double) {
+        bilboExercise.getImprovement()
+    }
+    
+    private var progressData: (weightData: [(Date, Double)], repsData: [(Date, Int)], volumeData: [(Date, Double)]) {
+        bilboExercise.getProgressData()
+    }
+    
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Header
+                    VStack(spacing: 8) {
+                        Text(bilboExercise.exercise?.title ?? NSLocalizedString("bilbo.exercise.deleted", comment: "Deleted exercise"))
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        Text(NSLocalizedString("bilbo.stats.subtitle", comment: "Performance Statistics"))
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.top)
+                    
+                    // Log Session Button
+                    if let onLogSession = onLogSession {
+                        Button(action: onLogSession) {
+                            HStack {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.title3)
+                                Text(NSLocalizedString("bilbo.log.session", comment: "Log session"))
+                                    .font(.headline)
+                            }
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(
+                                LinearGradient(
+                                    colors: [.blue, .cyan],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
+                    }
+                    
+                    // Summary Stats Cards
+                    summaryStatsSection
+                    
+                    // Improvement Card
+                    if !bilboExercise.sessions.isEmpty {
+                        improvementCard
+                    }
+                    
+                    // Charts
+                    if !bilboExercise.sessions.isEmpty {
+                        weightProgressChart
+                        repsProgressChart
+                        volumeProgressChart
+                    }
+                }
+                .padding()
+            }
+            .navigationTitle(NSLocalizedString("bilbo.stats.title", comment: "Statistics"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItemGroup(placement: .navigationBarTrailing) {
+                    if !bilboExercise.sessions.isEmpty {
+                        Button {
+                            showingHistory = true
+                        } label: {
+                            Image(systemName: "clock.arrow.circlepath")
+                        }
+                    }
+                }
+            }
+            .sheet(isPresented: $showingHistory) {
+                BilboSessionHistoryView(bilboExercise: bilboExercise)
+            }
+        }
+    }
+    
+    private var summaryStatsSection: some View {
+        VStack(spacing: 16) {
+            Text(NSLocalizedString("bilbo.stats.summary", comment: "Summary"))
+                .font(.headline)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            
+            LazyVGrid(columns: [
+                GridItem(.flexible()),
+                GridItem(.flexible())
+            ], spacing: 12) {
+                StatCard(
+                    title: NSLocalizedString("bilbo.stats.total.sessions", comment: "Total Sessions"),
+                    value: "\(stats.totalSessions)",
+                    icon: "calendar",
+                    color: .blue
+                )
+                
+                StatCard(
+                    title: NSLocalizedString("bilbo.stats.avg.weight", comment: "Avg Weight"),
+                    value: String(format: "%.1f kg", stats.avgWeight),
+                    icon: "scalemass",
+                    color: .green
+                )
+                
+                StatCard(
+                    title: NSLocalizedString("bilbo.stats.max.weight", comment: "Max Weight"),
+                    value: String(format: "%.1f kg", stats.maxWeight),
+                    icon: "arrow.up.circle.fill",
+                    color: .red
+                )
+                
+                StatCard(
+                    title: NSLocalizedString("bilbo.stats.total.volume", comment: "Total Volume"),
+                    value: String(format: "%.0f kg", stats.totalVolume),
+                    icon: "chart.bar.fill",
+                    color: .purple
+                )
+            }
+        }
+    }
+    
+    private var improvementCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(NSLocalizedString("bilbo.stats.improvement", comment: "Improvement"))
+                .font(.headline)
+            
+            HStack(spacing: 20) {
+                ImprovementItem(
+                    icon: "scalemass.fill",
+                    title: NSLocalizedString("bilbo.stats.weight.increase", comment: "Weight"),
+                    value: String(format: "%+.1f kg", improvement.weightIncrease),
+                    color: .blue
+                )
+                
+                ImprovementItem(
+                    icon: "arrow.up.circle.fill",
+                    title: NSLocalizedString("bilbo.stats.reps.increase", comment: "Reps"),
+                    value: String(format: "%+d", improvement.repsIncrease),
+                    color: .green
+                )
+                
+                ImprovementItem(
+                    icon: "chart.line.uptrend.xyaxis",
+                    title: NSLocalizedString("bilbo.stats.volume", comment: "Volume"),
+                    value: String(format: "%+.0f kg", improvement.volumeIncrease),
+                    color: .purple
+                )
+            }
+            
+            if improvement.percentageImprovement > 0 {
+                HStack {
+                    Image(systemName: "arrow.up.right.circle.fill")
+                        .foregroundStyle(.green)
+                    Text(String(format: NSLocalizedString("bilbo.stats.percentage.improvement", comment: "%.1f%% total improvement"), improvement.percentageImprovement))
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.green)
+                }
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemGray6))
+        )
+    }
+    
+    private var weightProgressChart: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(NSLocalizedString("bilbo.stats.weight.progression", comment: "Weight Progression"))
+                .font(.headline)
+            
+            if progressData.weightData.isEmpty {
+                Text(NSLocalizedString("bilbo.stats.no.data", comment: "No data available"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding()
+            } else {
+                ChartView(data: progressData.weightData.map { ($0.0.timeIntervalSince1970, $0.1) }, color: .blue)
+                    .frame(height: 200)
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemBackground))
+                .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+        )
+    }
+    
+    private var repsProgressChart: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(NSLocalizedString("bilbo.stats.reps.progression", comment: "Reps Progression"))
+                .font(.headline)
+            
+            if progressData.repsData.isEmpty {
+                Text(NSLocalizedString("bilbo.stats.no.data", comment: "No data available"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding()
+            } else {
+                ChartView(data: progressData.repsData.map { ($0.0.timeIntervalSince1970, Double($0.1)) }, color: .green)
+                    .frame(height: 200)
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemBackground))
+                .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+        )
+    }
+    
+    private var volumeProgressChart: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(NSLocalizedString("bilbo.stats.volume.progression", comment: "Volume Progression"))
+                .font(.headline)
+            
+            if progressData.volumeData.isEmpty {
+                Text(NSLocalizedString("bilbo.stats.no.data", comment: "No data available"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding()
+            } else {
+                ChartView(data: progressData.volumeData.map { ($0.0.timeIntervalSince1970, $0.1) }, color: .purple)
+                    .frame(height: 200)
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemBackground))
+                .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+        )
+    }
+}
+
+struct StatCard: View {
+    let title: String
+    let value: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.title2)
+                .foregroundStyle(color)
+            Text(value)
+                .font(.title3)
+                .fontWeight(.bold)
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemGray6))
+        )
+    }
+}
+
+struct ImprovementItem: View {
+    let icon: String
+    let title: String
+    let value: String
+    let color: Color
+    
+    var body: some View {
+        VStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundStyle(color)
+            Text(value)
+                .font(.headline)
+                .fontWeight(.bold)
+            Text(title)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+// Simple Line Chart View
+struct ChartView: View {
+    let data: [(Double, Double)] // (time, value)
+    let color: Color
+    
+    private var minValue: Double {
+        data.map { $0.1 }.min() ?? 0
+    }
+    
+    private var maxValue: Double {
+        data.map { $0.1 }.max() ?? 1
+    }
+    
+    private var minTime: Double {
+        data.map { $0.0 }.min() ?? 0
+    }
+    
+    private var maxTime: Double {
+        data.map { $0.0 }.max() ?? 1
+    }
+    
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                // Background grid
+                Path { path in
+                    for i in 0...4 {
+                        let y = geometry.size.height * CGFloat(i) / 4
+                        path.move(to: CGPoint(x: 0, y: y))
+                        path.addLine(to: CGPoint(x: geometry.size.width, y: y))
+                    }
+                }
+                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                
+                // Chart line
+                if data.count > 1 {
+                    Path { path in
+                        let range = maxValue - minValue
+                        let timeRange = maxTime - minTime
+                        
+                        for (index, point) in data.enumerated() {
+                            let x = timeRange > 0 ? CGFloat((point.0 - minTime) / timeRange) * geometry.size.width : CGFloat(index) / CGFloat(data.count - 1) * geometry.size.width
+                            let y = range > 0 ? geometry.size.height - (CGFloat((point.1 - minValue) / range) * geometry.size.height) : geometry.size.height / 2
+                            
+                            if index == 0 {
+                                path.move(to: CGPoint(x: x, y: y))
+                            } else {
+                                path.addLine(to: CGPoint(x: x, y: y))
+                            }
+                        }
+                    }
+                    .stroke(color, style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
+                    
+                    // Data points
+                    ForEach(Array(data.enumerated()), id: \.offset) { index, point in
+                        let range = maxValue - minValue
+                        let timeRange = maxTime - minTime
+                        let x = timeRange > 0 ? CGFloat((point.0 - minTime) / timeRange) * geometry.size.width : CGFloat(index) / CGFloat(data.count - 1) * geometry.size.width
+                        let y = range > 0 ? geometry.size.height - (CGFloat((point.1 - minValue) / range) * geometry.size.height) : geometry.size.height / 2
+                        
+                        Circle()
+                            .fill(color)
+                            .frame(width: 8, height: 8)
+                            .position(x: x, y: y)
+                    }
+                } else if data.count == 1 {
+                    let point = data[0]
+                    let range = maxValue - minValue
+                    let timeRange = maxTime - minTime
+                    let x = geometry.size.width / 2
+                    let y = range > 0 ? geometry.size.height - (CGFloat((point.1 - minValue) / range) * geometry.size.height) : geometry.size.height / 2
+                    
+                    Circle()
+                        .fill(color)
+                        .frame(width: 12, height: 12)
+                        .position(x: x, y: y)
+                }
+                
+                // Y-axis labels
+                VStack {
+                    Text(String(format: "%.1f", maxValue))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text(String(format: "%.1f", minValue))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.leading, 4)
+            }
+        }
     }
 }
 
