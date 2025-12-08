@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import Charts
 
 struct BilboView: View {
     @Environment(\.modelContext) private var context
@@ -2262,6 +2263,26 @@ struct BilboCycleDetailView: View {
     private var sortedDays: [BilboDay] {
         cycle.days.sorted { $0.dayNumber < $1.dayNumber }
     }
+
+    private var cycleStats: (completedDays: Int, totalDays: Int, avgWeight: Double, maxWeight: Double, avgReps: Double, maxReps: Int, totalVolume: Double) {
+        cycle.getCycleStats()
+    }
+
+    private var progressPoints: [ProgressPoint] {
+        cycle.days
+            .filter { $0.isCompleted && $0.date != nil }
+            .sorted { ($0.date ?? .distantPast) < ($1.date ?? .distantPast) }
+            .map { day in
+                ProgressPoint(
+                    date: day.date ?? .now,
+                    targetWeight: day.targetWeight,
+                    actualWeight: day.actualWeight,
+                    reps: day.repsCompleted,
+                    volume: day.actualWeight * Double(day.repsCompleted),
+                    estimatedOneRM: day.estimatedOneRM
+                )
+            }
+    }
     
     var body: some View {
         NavigationStack {
@@ -2269,6 +2290,12 @@ struct BilboCycleDetailView: View {
                 VStack(spacing: 24) {
                     // Header
                     cycleHeader
+
+                    // Quick stats
+                    insightsSection
+
+                    // Progression chart
+                    progressSection
                     
                     // Days List
                     daysList
@@ -2374,6 +2401,161 @@ struct BilboCycleDetailView: View {
                 }
             }
         }
+    }
+
+    private var insightsSection: some View {
+        let stats = cycleStats
+
+        return VStack(alignment: .leading, spacing: 12) {
+            Text("Resumen rápido")
+                .font(.headline)
+
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 2), spacing: 12) {
+                insightCard(
+                    icon: "checkmark.circle.fill",
+                    title: "Días completados",
+                    value: "\(stats.completedDays)/\(stats.totalDays)",
+                    subtitle: "Progreso del ciclo",
+                    color: .green
+                )
+
+                insightCard(
+                    icon: "speedometer",
+                    title: "Peso medio",
+                    value: stats.avgWeight > 0 ? formatWeightDisplay(stats.avgWeight) : "--",
+                    subtitle: "Mejor: \(formatWeightDisplay(stats.maxWeight))",
+                    color: .blue
+                )
+
+                insightCard(
+                    icon: "dumbbell",
+                    title: "Reps promedio",
+                    value: stats.avgReps > 0 ? String(format: "%.1f", stats.avgReps) : "--",
+                    subtitle: "Máximo: \(stats.maxReps)",
+                    color: .orange
+                )
+
+                insightCard(
+                    icon: "chart.bar.xaxis",
+                    title: "Volumen total",
+                    value: stats.totalVolume > 0 ? String(format: "%.0f kg", stats.totalVolume) : "--",
+                    subtitle: "kg levantados",
+                    color: .purple
+                )
+            }
+        }
+    }
+
+    private var progressSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Evolución")
+                .font(.headline)
+
+            if progressPoints.isEmpty {
+                VStack(spacing: 12) {
+                    Image(systemName: "chart.line.uptrend.xyaxis")
+                        .font(.system(size: 32))
+                        .foregroundStyle(.secondary)
+                    Text("Cuando completes sesiones verás la progresión aquí.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(.systemGray6))
+                )
+            } else {
+                Chart {
+                    ForEach(progressPoints) { point in
+                        LineMark(
+                            x: .value("Fecha", point.date),
+                            y: .value("Peso trabajado", point.actualWeight)
+                        )
+                        .foregroundStyle(.blue)
+                        .interpolationMethod(.monotone)
+
+                        PointMark(
+                            x: .value("Fecha", point.date),
+                            y: .value("Peso trabajado", point.actualWeight)
+                        )
+                        .foregroundStyle(.blue)
+                        .symbolSize(60)
+                    }
+
+                    ForEach(progressPoints.compactMap { point -> ProgressPoint? in
+                        guard let estimated = point.estimatedOneRM else { return nil }
+                        var copy = point
+                        copy.estimatedOneRM = estimated
+                        return copy
+                    }) { point in
+                        LineMark(
+                            x: .value("Fecha", point.date),
+                            y: .value("1RM estimado", point.estimatedOneRM ?? 0)
+                        )
+                        .foregroundStyle(.green)
+                        .interpolationMethod(.monotone)
+                        .lineStyle(StrokeStyle(lineWidth: 2, dash: [6, 4]))
+                    }
+                }
+                .frame(height: 220)
+                .chartXAxis {
+                    AxisMarks(values: .automatic(desiredCount: 5)) { _ in
+                        AxisGridLine()
+                        AxisTick()
+                        AxisValueLabel(format: .dateTime.month().day())
+                    }
+                }
+                .chartYAxis {
+                    AxisMarks { _ in
+                        AxisGridLine()
+                        AxisTick()
+                        AxisValueLabel()
+                    }
+                }
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(.systemGray6))
+                )
+            }
+        }
+    }
+
+    private func insightCard(icon: String, title: String, value: String, subtitle: String, color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Image(systemName: icon)
+                    .foregroundStyle(color)
+                Text(title)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            Text(value)
+                .font(.title3)
+                .fontWeight(.bold)
+            Text(subtitle)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemGray6))
+        )
+    }
+
+    private struct ProgressPoint: Identifiable {
+        let id = UUID()
+        var date: Date
+        let targetWeight: Double
+        let actualWeight: Double
+        let reps: Int
+        let volume: Double
+        var estimatedOneRM: Double?
     }
 }
 
