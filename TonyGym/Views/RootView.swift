@@ -11,17 +11,17 @@ struct RootView: View {
             }
 
             NavigationStack {
+                DashboardView()
+            }
+            .tabItem {
+                Label(NSLocalizedString("nav.dashboard", comment: "Dashboard tab"), systemImage: "chart.bar.fill")
+            }
+            
+            NavigationStack {
                 ExerciseListView()
             }
             .tabItem {
                 Label(NSLocalizedString("nav.exercises", comment: "Exercises tab"), systemImage: "dumbbell")
-            }
-            
-            NavigationStack {
-                StatisticsView()
-            }
-            .tabItem {
-                Label(NSLocalizedString("nav.progress", comment: "Progress tab"), systemImage: "chart.line.uptrend.xyaxis")
             }
             
             NavigationStack {

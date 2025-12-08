@@ -32,6 +32,7 @@ struct HomeView: View {
     @State private var pendingWeightChange: (exercise: Exercise, weight: Double)?
     @State private var showingWelcomeDialog: Bool = false
     @State private var newRoutineName: String = ""
+    @Query private var exerciseMarks: [ExerciseMark]
 
     var body: some View {
         NavigationStack {
@@ -265,8 +266,24 @@ struct HomeView: View {
                             Spacer()
                             
                             HStack(spacing: 8) {
+                                // Botón para marcar como entrenado (toggle visual)
                                 Button {
-                                    if let ex { adjustWeight(exercise: ex, delta: -2.5) }
+                                    if let ex = ex {
+                                        toggleExerciseMark(exercise: ex)
+                                    }
+                                } label: {
+                                    Image(systemName: isExerciseMarkedToday(ex) ? "checkmark.circle.fill" : "checkmark.circle")
+                                        .foregroundStyle(isExerciseMarkedToday(ex) ? .green : .secondary)
+                                        .font(.title3)
+                                }
+                                .buttonStyle(.plain)
+                                
+                                Button {
+                                    if let ex { 
+                                        adjustWeight(exercise: ex, delta: -2.5)
+                                        // Marcar automáticamente como entrenado al cambiar peso
+                                        markExerciseAsTrained(exercise: ex)
+                                    }
                                 } label: {
                                     Image(systemName: "minus.circle.fill")
                                         .foregroundStyle(.secondary)
@@ -286,7 +303,11 @@ struct HomeView: View {
                                     }
                                 
                                 Button {
-                                    if let ex { adjustWeight(exercise: ex, delta: 2.5) }
+                                    if let ex { 
+                                        adjustWeight(exercise: ex, delta: 2.5)
+                                        // Marcar automáticamente como entrenado al cambiar peso
+                                        markExerciseAsTrained(exercise: ex)
+                                    }
                                 } label: {
                                     Image(systemName: "plus.circle.fill")
                                         .foregroundStyle(.secondary)
@@ -544,6 +565,90 @@ struct HomeView: View {
         }
     }
     
+    private func isExerciseMarkedToday(_ exercise: Exercise?) -> Bool {
+        guard let exercise = exercise else { return false }
+        return ExerciseMark.hasMark(for: exercise, date: Date(), in: Array(exerciseMarks))
+    }
+    
+    private func toggleExerciseMark(exercise: Exercise) {
+        let today = Date()
+        let isMarked = ExerciseMark.hasMark(for: exercise, date: today, in: Array(exerciseMarks))
+        
+        if isMarked {
+            // Eliminar marca
+            if let mark = exerciseMarks.first(where: { 
+                $0.exercise?.id == exercise.id && 
+                Calendar.current.isDate($0.date, inSameDayAs: today)
+            }) {
+                context.delete(mark)
+            }
+        } else {
+            // Crear marca
+            let mark = ExerciseMark(date: today, exercise: exercise, notes: "")
+            context.insert(mark)
+        }
+        
+        // Actualizar streak
+        updateStreakForToday()
+        
+        // Sincronizar al widget
+        syncStreakToWidget()
+    }
+    
+    private func markExerciseAsTrained(exercise: Exercise) {
+        let today = Date()
+        let isMarked = ExerciseMark.hasMark(for: exercise, date: today, in: Array(exerciseMarks))
+        
+        if !isMarked {
+            let mark = ExerciseMark(date: today, exercise: exercise, notes: "Ajuste de peso")
+            context.insert(mark)
+            
+            // Actualizar streak
+            updateStreakForToday()
+            
+            // Sincronizar al widget
+            syncStreakToWidget()
+        }
+    }
+    
+    private func updateStreakForToday() {
+        let fetchDescriptor = FetchDescriptor<WorkoutStreak>()
+        let streak: WorkoutStreak
+        if let existing = try? context.fetch(fetchDescriptor).first {
+            streak = existing
+        } else {
+            streak = WorkoutStreak()
+            context.insert(streak)
+        }
+        
+        // Obtener días de descanso de todas las rutinas
+        let routineDescriptor = FetchDescriptor<Routine>()
+        guard let routines = try? context.fetch(routineDescriptor) else { return }
+        
+        var allWorkoutWeekdays = Set<Int>()
+        for routine in routines {
+            let workoutWeekdays = Set(routine.entries.map { $0.weekday.rawValue })
+            allWorkoutWeekdays.formUnion(workoutWeekdays)
+        }
+        
+        let allWeekdays = Set(Weekday.allCases.map { $0.rawValue })
+        let restWeekdays = allWeekdays.subtracting(allWorkoutWeekdays)
+        let restDays = restWeekdays.isEmpty ? nil : restWeekdays
+        
+        // Obtener marcas diarias y de ejercicios
+        let dailyMarkDescriptor = FetchDescriptor<DailyWorkoutMark>()
+        let dailyMarks = (try? context.fetch(dailyMarkDescriptor)) ?? []
+        
+        streak.updateStreak(workoutDate: Date(), restDays: restDays, dailyMarks: dailyMarks, exerciseMarks: Array(exerciseMarks))
+    }
+    
+    private func syncStreakToWidget() {
+        let fetchDescriptor = FetchDescriptor<WorkoutStreak>()
+        if let streak = try? context.fetch(fetchDescriptor).first {
+            WidgetSync.writeStreakSnapshot(streak: streak)
+        }
+    }
+    
     private func savePendingWeightChange() {
         guard let pending = pendingWeightChange else { return }
         
@@ -556,6 +661,9 @@ struct HomeView: View {
             notes: "Ajuste rápido desde Home"
         )
         context.insert(workoutLog)
+        
+        // Marcar automáticamente como entrenado al guardar cambio de peso
+        markExerciseAsTrained(exercise: pending.exercise)
         
         // Clear pending change
         pendingWeightChange = nil
@@ -625,48 +733,6 @@ struct HomeView: View {
     }
 }
 
-private struct ExerciseDetailSheet: View {
-    let exercise: Exercise
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    if !exercise.images.isEmpty {
-                        TabView {
-                            ForEach(Array(exercise.images.enumerated()), id: \.offset) { _, att in
-                                if let ui = UIImage(data: att.data) {
-                                    Image(uiImage: ui)
-                                        .resizable()
-                                        .scaledToFit()
-                                }
-                            }
-                        }
-                        .frame(height: 260)
-                        .tabViewStyle(.page)
-                    }
-                    Text(exercise.title).font(.title2).bold()
-                    HStack {
-                        Image(systemName: "scalemass")
-                        Text(String(format: "%.1f kg", exercise.defaultWeightKg))
-                    }
-                    .foregroundStyle(.secondary)
-                    if !exercise.details.isEmpty {
-                        Text(exercise.details).font(.body)
-                    }
-                }
-                .padding()
-            }
-            .navigationTitle(NSLocalizedString("exercise.detail.title", comment: "Detail"))
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(NSLocalizedString("common.close", comment: "Close")) { dismiss() }
-                }
-            }
-        }
-    }
-}
 
 private struct ExercisePickerView: View {
     let exercises: [Exercise]

@@ -8,6 +8,8 @@ struct WeightEditorSheet: View {
     @Binding var customWeight: Double
     @StateObject private var weightFormatter = WeightFormatter.shared
     
+    @Query private var exerciseMarks: [ExerciseMark]
+    
     // Display weight in user's preferred unit
     @State private var displayWeight: Double = 0
     
@@ -167,5 +169,62 @@ struct WeightEditorSheet: View {
             notes: NSLocalizedString("home.exercise.weight.updated", comment: "Weight updated from Home")
         )
         context.insert(workoutLog)
+        
+        // Marcar automáticamente como entrenado al cambiar peso
+        markExerciseAsTrained()
+    }
+    
+    private func markExerciseAsTrained() {
+        let today = Date()
+        let isMarked = ExerciseMark.hasMark(for: exercise, date: today, in: Array(exerciseMarks))
+        
+        if !isMarked {
+            let mark = ExerciseMark(date: today, exercise: exercise, notes: "Ajuste de peso")
+            context.insert(mark)
+            
+            // Actualizar streak
+            updateStreakForToday()
+            
+            // Sincronizar al widget
+            syncStreakToWidget()
+        }
+    }
+    
+    private func updateStreakForToday() {
+        let fetchDescriptor = FetchDescriptor<WorkoutStreak>()
+        let streak: WorkoutStreak
+        if let existing = try? context.fetch(fetchDescriptor).first {
+            streak = existing
+        } else {
+            streak = WorkoutStreak()
+            context.insert(streak)
+        }
+        
+        // Obtener días de descanso de todas las rutinas
+        let routineDescriptor = FetchDescriptor<Routine>()
+        guard let routines = try? context.fetch(routineDescriptor) else { return }
+        
+        var allWorkoutWeekdays = Set<Int>()
+        for routine in routines {
+            let workoutWeekdays = Set(routine.entries.map { $0.weekday.rawValue })
+            allWorkoutWeekdays.formUnion(workoutWeekdays)
+        }
+        
+        let allWeekdays = Set(Weekday.allCases.map { $0.rawValue })
+        let restWeekdays = allWeekdays.subtracting(allWorkoutWeekdays)
+        let restDays = restWeekdays.isEmpty ? nil : restWeekdays
+        
+        // Obtener marcas diarias y de ejercicios
+        let dailyMarkDescriptor = FetchDescriptor<DailyWorkoutMark>()
+        let dailyMarks = (try? context.fetch(dailyMarkDescriptor)) ?? []
+        
+        streak.updateStreak(workoutDate: Date(), restDays: restDays, dailyMarks: dailyMarks, exerciseMarks: Array(exerciseMarks))
+    }
+    
+    private func syncStreakToWidget() {
+        let fetchDescriptor = FetchDescriptor<WorkoutStreak>()
+        if let streak = try? context.fetch(fetchDescriptor).first {
+            WidgetSync.writeStreakSnapshot(streak: streak)
+        }
     }
 }

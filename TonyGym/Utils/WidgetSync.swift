@@ -93,6 +93,38 @@ enum WidgetSync {
         }
         return WidgetRoutineSnapshot(date: today, weekday: weekdayEnum.rawValue, routineName: routineName, items: items)
     }
+    
+    // MARK: - Streak Snapshot
+    
+    struct StreakSnapshot: Codable {
+        let currentStreak: Int
+        let longestStreak: Int
+        let lastWorkoutDate: Date?
+        let isActive: Bool
+        let totalWorkoutDays: Int
+    }
+    
+    static func writeStreakSnapshot(streak: WorkoutStreak) {
+        guard let defaults = UserDefaults(suiteName: appGroupId) else { return }
+        
+        let snapshot = StreakSnapshot(
+            currentStreak: streak.currentStreak,
+            longestStreak: streak.longestStreak,
+            lastWorkoutDate: streak.lastWorkoutDate,
+            isActive: streak.isActive,
+            totalWorkoutDays: streak.totalWorkoutDays
+        )
+        
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        if let data = try? encoder.encode(snapshot) {
+            defaults.set(data, forKey: "streakSnapshot")
+            defaults.synchronize()
+            if #available(iOS 14.0, *) {
+                WidgetCenter.shared.reloadAllTimelines()
+            }
+        }
+    }
 }
 
 

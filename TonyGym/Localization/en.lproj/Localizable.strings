@@ -2,6 +2,7 @@
 
 /* Navigation */
 "nav.today" = "Today";
+"nav.dashboard" = "Dashboard";
 "nav.exercises" = "Exercises";
 "nav.progress" = "Progress";
 "nav.bilbo" = "BILBO";
@@ -148,6 +149,11 @@
 
 /* Widget */
 "widget.more.exercises" = "+%d more";
+"widget.streak.title" = "Streak";
+"widget.streak.days" = "days";
+"widget.streak.best" = "Best";
+"widget.streak.display" = "Workout Streak";
+"widget.streak.description" = "Track your consecutive workout days";
 
 /* Units */
 "unit.kg" = "kg";
@@ -305,3 +311,102 @@
 "bilbo.enter.1rm" = "Enter 1RM";
 "bilbo.enter.1rm.title" = "Enter Your 1RM";
 "bilbo.quick.increment" = "Quick select";
+
+/* Dashboard */
+"dashboard.title" = "Dashboard";
+"dashboard.streak.current" = "Current streak";
+"dashboard.streak.days" = "days";
+"dashboard.streak.best" = "Best streak";
+"dashboard.metric.workouts" = "Workouts";
+"dashboard.metric.weight" = "Total weight";
+"dashboard.metric.days" = "Active days";
+"dashboard.metric.prs" = "Records";
+"dashboard.volume.weekly" = "Weekly Volume";
+"dashboard.volume.monthly" = "Monthly Volume";
+"dashboard.no.data" = "No data available";
+"dashboard.comparison.title" = "Period Comparison";
+"dashboard.comparison.current" = "Current period";
+"dashboard.comparison.previous" = "Previous period";
+"dashboard.comparison.change" = "change";
+"dashboard.prs.recent" = "Recent Records";
+"dashboard.prs.none" = "No personal records yet";
+
+/* Personal Records */
+"pr.type.weight" = "Max weight";
+"pr.type.reps" = "Max reps";
+"pr.type.volume" = "Max volume";
+"pr.detail.title" = "Record Details";
+"pr.detail.exercise" = "Exercise";
+"pr.detail.type" = "Record type";
+"pr.detail.values" = "Values";
+"pr.detail.weight" = "Weight";
+"pr.detail.reps" = "Repetitions";
+"pr.detail.sets" = "Sets";
+"pr.detail.volume" = "Volume";
+"pr.detail.date" = "Date";
+"pr.detail.time.since" = "Time since previous PR";
+"pr.detail.days" = "%d days";
+"pr.detail.notes" = "Notes";
+
+/* Notifications */
+"notification.pr.title" = "New Record!";
+"notification.pr.body" = "New record in %@: %@ - %@";
+"notification.weekly.title" = "Weekly Summary";
+"notification.weekly.body" = "Check your progress this week";
+
+/* Milestones */
+"milestone.100.title" = "100 Workouts!";
+"milestone.100.message" = "You've completed 100 workouts. Keep it up!";
+"milestone.250.title" = "250 Workouts!";
+"milestone.250.message" = "Amazing, you've reached 250 workouts. You're a machine!";
+"milestone.500.title" = "500 Workouts!";
+"milestone.500.message" = "Wow! 500 workouts completed. You're a legend!";
+"milestone.streak7.title" = "7 Day Streak!";
+"milestone.streak7.message" = "You've maintained a 7-day streak. Great work!";
+"milestone.streak30.title" = "30 Day Streak!";
+"milestone.streak30.message" = "Incredible! 30 consecutive days of training. You're unstoppable!";
+"milestone.streak100.title" = "100 Day Streak!";
+"milestone.streak100.message" = "Legend! You've maintained a 100-day streak. You're an inspiration!";
+
+/* Exercise */
+"exercise.deleted" = "Deleted exercise";
+"exercise.detail.stats" = "Statistics";
+"exercise.detail.no.data" = "No workout data yet";
+"exercise.detail.total.workouts" = "Total workouts";
+"exercise.detail.max.weight" = "Max weight";
+"exercise.detail.total.volume" = "Total volume";
+"exercise.detail.last.workout" = "Last workout";
+"exercise.detail.prs" = "Personal Records";
+"exercise.detail.progression" = "Weight Progression";
+"exercise.detail.recent.workouts" = "Recent Workouts";
+"exercise.detail.sets.reps" = "%d sets, %d reps";
+
+/* Quick Workout Mark */
+"home.quick.mark" = "Mark as trained";
+"quick.mark.title" = "Mark Workout";
+"quick.mark.date" = "Date";
+"quick.mark.already.marked" = "Already marked for this day";
+"quick.mark.notes" = "Notes (optional)";
+"quick.mark.notes.placeholder" = "e.g. Light workout, cardio...";
+"quick.mark.explanation" = "Mark a day as trained to maintain your streak, even if you don't log specific exercises.";
+"quick.mark.exercise.title" = "Mark Exercise";
+"quick.mark.exercise" = "Exercise";
+"quick.mark.exercise.explanation" = "Mark this exercise as trained to maintain your streak, even if you didn't change weight or log details.";
+"quick.mark.exercise.button" = "Mark as trained";
+"quick.mark.exercise.marked" = "Marked as trained";
+
+/* Workout Log - Individual Sets */
+"workout.log.mode.simple" = "Simple";
+"workout.log.mode.detailed" = "Detailed";
+"workout.log.sets.detailed" = "Individual Sets";
+"workout.log.add.set" = "Add Set";
+"workout.log.set" = "Set";
+"workout.log.total.reps" = "Total reps";
+"workout.log.total.volume" = "Total volume";
+
+/* Rest Timer */
+"rest.timer.title" = "Rest";
+"rest.timer.start" = "Start";
+"rest.timer.pause" = "Pause";
+"rest.timer.resume" = "Resume";
+"rest.timer.reset" = "Reset";

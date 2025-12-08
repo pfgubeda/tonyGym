@@ -2,6 +2,7 @@
 
 /* Navigation */
 "nav.today" = "Hoy";
+"nav.dashboard" = "Dashboard";
 "nav.exercises" = "Ejercicios";
 "nav.progress" = "Progreso";
 "nav.bilbo" = "BILBO";
@@ -148,6 +149,11 @@
 
 /* Widget */
 "widget.more.exercises" = "+%d más";
+"widget.streak.title" = "Racha";
+"widget.streak.days" = "días";
+"widget.streak.best" = "Mejor";
+"widget.streak.display" = "Racha de Entrenamiento";
+"widget.streak.description" = "Rastrea tus días consecutivos de entrenamiento";
 
 /* Units */
 "unit.kg" = "kg";
@@ -305,3 +311,102 @@
 "bilbo.enter.1rm" = "Introducir 1RM";
 "bilbo.enter.1rm.title" = "Introduce tu 1RM";
 "bilbo.quick.increment" = "Selección rápida";
+
+/* Dashboard */
+"dashboard.title" = "Dashboard";
+"dashboard.streak.current" = "Racha actual";
+"dashboard.streak.days" = "días";
+"dashboard.streak.best" = "Mejor racha";
+"dashboard.metric.workouts" = "Entrenamientos";
+"dashboard.metric.weight" = "Peso total";
+"dashboard.metric.days" = "Días activos";
+"dashboard.metric.prs" = "Récords";
+"dashboard.volume.weekly" = "Volumen Semanal";
+"dashboard.volume.monthly" = "Volumen Mensual";
+"dashboard.no.data" = "No hay datos disponibles";
+"dashboard.comparison.title" = "Comparación de Períodos";
+"dashboard.comparison.current" = "Período actual";
+"dashboard.comparison.previous" = "Período anterior";
+"dashboard.comparison.change" = "cambio";
+"dashboard.prs.recent" = "Récords Recientes";
+"dashboard.prs.none" = "Aún no hay récords personales";
+
+/* Personal Records */
+"pr.type.weight" = "Peso máximo";
+"pr.type.reps" = "Reps máximo";
+"pr.type.volume" = "Volumen máximo";
+"pr.detail.title" = "Detalles del Récord";
+"pr.detail.exercise" = "Ejercicio";
+"pr.detail.type" = "Tipo de récord";
+"pr.detail.values" = "Valores";
+"pr.detail.weight" = "Peso";
+"pr.detail.reps" = "Repeticiones";
+"pr.detail.sets" = "Series";
+"pr.detail.volume" = "Volumen";
+"pr.detail.date" = "Fecha";
+"pr.detail.time.since" = "Tiempo desde PR anterior";
+"pr.detail.days" = "%d días";
+"pr.detail.notes" = "Notas";
+
+/* Notifications */
+"notification.pr.title" = "¡Nuevo Récord!";
+"notification.pr.body" = "Nuevo récord en %@: %@ - %@";
+"notification.weekly.title" = "Resumen Semanal";
+"notification.weekly.body" = "Revisa tu progreso esta semana";
+
+/* Milestones */
+"milestone.100.title" = "¡100 Entrenamientos!";
+"milestone.100.message" = "Has completado 100 entrenamientos. ¡Sigue así!";
+"milestone.250.title" = "¡250 Entrenamientos!";
+"milestone.250.message" = "Increíble, has alcanzado 250 entrenamientos. ¡Eres una máquina!";
+"milestone.500.title" = "¡500 Entrenamientos!";
+"milestone.500.message" = "¡Wow! 500 entrenamientos completados. ¡Eres una leyenda!";
+"milestone.streak7.title" = "¡7 Días de Racha!";
+"milestone.streak7.message" = "Has mantenido una racha de 7 días consecutivos. ¡Excelente trabajo!";
+"milestone.streak30.title" = "¡30 Días de Racha!";
+"milestone.streak30.message" = "¡Increíble! 30 días consecutivos entrenando. ¡Eres imparable!";
+"milestone.streak100.title" = "¡100 Días de Racha!";
+"milestone.streak100.message" = "¡Leyenda! Has mantenido una racha de 100 días. ¡Eres una inspiración!";
+
+/* Exercise */
+"exercise.deleted" = "Ejercicio eliminado";
+"exercise.detail.stats" = "Estadísticas";
+"exercise.detail.no.data" = "Aún no hay datos de entrenamiento";
+"exercise.detail.total.workouts" = "Entrenamientos";
+"exercise.detail.max.weight" = "Peso máximo";
+"exercise.detail.total.volume" = "Volumen total";
+"exercise.detail.last.workout" = "Último entrenamiento";
+"exercise.detail.prs" = "Récords Personales";
+"exercise.detail.progression" = "Progresión de Peso";
+"exercise.detail.recent.workouts" = "Entrenamientos Recientes";
+"exercise.detail.sets.reps" = "%d series, %d reps";
+
+/* Quick Workout Mark */
+"home.quick.mark" = "Marcar como entrenado";
+"quick.mark.title" = "Marcar Entrenamiento";
+"quick.mark.date" = "Fecha";
+"quick.mark.already.marked" = "Ya marcado para este día";
+"quick.mark.notes" = "Notas (opcional)";
+"quick.mark.notes.placeholder" = "Ej: Entrenamiento ligero, cardio...";
+"quick.mark.explanation" = "Marca un día como entrenado para mantener tu racha, incluso si no registras ejercicios específicos.";
+"quick.mark.exercise.title" = "Marcar Ejercicio";
+"quick.mark.exercise" = "Ejercicio";
+"quick.mark.exercise.explanation" = "Marca este ejercicio como entrenado para mantener tu racha, incluso si no cambiaste peso o no registraste detalles.";
+"quick.mark.exercise.button" = "Marcar como entrenado";
+"quick.mark.exercise.marked" = "Marcado como entrenado";
+
+/* Workout Log - Individual Sets */
+"workout.log.mode.simple" = "Simple";
+"workout.log.mode.detailed" = "Detallado";
+"workout.log.sets.detailed" = "Series Individuales";
+"workout.log.add.set" = "Añadir Serie";
+"workout.log.set" = "Serie";
+"workout.log.total.reps" = "Repeticiones totales";
+"workout.log.total.volume" = "Volumen total";
+
+/* Rest Timer */
+"rest.timer.title" = "Descanso";
+"rest.timer.start" = "Iniciar";
+"rest.timer.pause" = "Pausar";
+"rest.timer.resume" = "Reanudar";
+"rest.timer.reset" = "Reiniciar";

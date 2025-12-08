@@ -57,7 +57,7 @@ struct ExerciseListView: View {
             } else {
                 List {
                     ForEach(filteredExercises()) { ex in
-                        NavigationLink(destination: ExerciseEditorView(exercise: ex)) {
+                        NavigationLink(destination: ExerciseDetailView(exercise: ex)) {
                             VStack(alignment: .leading) {
                                 HStack {
                                     Text(ex.title).font(.headline)

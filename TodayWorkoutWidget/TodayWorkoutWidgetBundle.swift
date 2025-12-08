@@ -15,5 +15,6 @@ struct TodayWorkoutWidgetBundle: WidgetBundle {
         LockScreenWidget()
         TodayWorkoutWidgetControl()
         TodayWorkoutWidgetLiveActivity()
+        StreakWidget()
     }
 }

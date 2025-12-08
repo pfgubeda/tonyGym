@@ -5,7 +5,7 @@ import SwiftData
 struct TonyGymApp: App {
     var sharedModelContainer: ModelContainer = {
         do {
-            let container = try ModelContainer(for: Exercise.self, ImageAttachment.self, Routine.self, RoutineEntry.self, DayPlan.self, WorkoutLog.self, DailyProgress.self, BilboExercise.self, BilboSession.self, BilboCycle.self, BilboDay.self)
+            let container = try ModelContainer(for: Exercise.self, ImageAttachment.self, Routine.self, RoutineEntry.self, DayPlan.self, WorkoutLog.self, DailyProgress.self, BilboExercise.self, BilboSession.self, BilboCycle.self, BilboDay.self, PersonalRecord.self, WorkoutStreak.self, WorkoutSet.self, DailyWorkoutMark.self, ExerciseMark.self)
             return container
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
@@ -15,6 +15,11 @@ struct TonyGymApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                .onAppear {
+                    // Solicitar permisos de notificación al iniciar
+                    NotificationManager.shared.requestAuthorization()
+                    NotificationManager.shared.scheduleWeeklySummary()
+                }
         }
         .modelContainer(sharedModelContainer)
     }
