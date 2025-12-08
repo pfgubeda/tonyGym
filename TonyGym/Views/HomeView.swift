@@ -498,7 +498,10 @@ struct HomeView: View {
             routineName: routine.name,
             entries: todayEntries
         )
+        // Keep writing the legacy today snapshot for compatibility
         WidgetSync.writeTodaySnapshot(snapshot: snapshot)
+        // Also write a full routine snapshot so the widget can update daily without app launch
+        WidgetSync.writeFullRoutineSnapshot(routineName: routine.name, entries: routine.entries)
     }
     
     private func entriesForWeekday(_ weekday: Weekday) -> [RoutineEntry] {

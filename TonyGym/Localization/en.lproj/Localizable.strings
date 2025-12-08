@@ -267,3 +267,41 @@
 "bilbo.stats.reps.progression" = "Reps Progression";
 "bilbo.stats.volume.progression" = "Volume Progression";
 "bilbo.stats.no.data" = "No data available";
+
+/* BILBO Cycle Method */
+"bilbo.add.cycle" = "Add Cycle";
+"bilbo.create.cycle" = "Create Cycle";
+"bilbo.cycle" = "Cycle";
+"bilbo.cycle.settings" = "Cycle Settings";
+"bilbo.initial.1rm" = "Initial 1RM";
+"bilbo.final.1rm" = "Final 1RM";
+"bilbo.number.of.days" = "Number of days";
+"bilbo.increment" = "Increment per day";
+"bilbo.day" = "Day";
+"bilbo.days" = "Days";
+"bilbo.target" = "Target";
+"bilbo.target.weight" = "Target weight";
+"bilbo.not.completed" = "Not completed";
+"bilbo.cycle.completed" = "Cycle completed";
+"bilbo.reset.cycle" = "Reset cycle";
+"bilbo.edit.day" = "Edit Day";
+"bilbo.valid.work" = "Valid work";
+"bilbo.date" = "Date";
+"bilbo.estimated.1rm" = "Estimated 1RM";
+"bilbo.cycle.preview" = "Cycle Preview";
+"bilbo.calculate.from.history" = "Calculate from history";
+"common.create" = "Create";
+"common.continue" = "Continue";
+
+/* BILBO 1RM Discovery */
+"bilbo.discover.1rm.title" = "Discover Your 1RM";
+"bilbo.discover.1rm.subtitle" = "First, let's discover your one-rep maximum for this exercise";
+"bilbo.discover.from.history" = "Calculate from History";
+"bilbo.discover.from.history.description" = "Use your workout history to automatically estimate your 1RM";
+"bilbo.discover.manual.test" = "Manual Test";
+"bilbo.discover.manual.test.description" = "Enter weight and reps to calculate your 1RM using formulas";
+"bilbo.discover.manual.entry" = "Enter Manually";
+"bilbo.discover.manual.entry.description" = "If you already know your 1RM, enter it directly";
+"bilbo.enter.1rm" = "Enter 1RM";
+"bilbo.enter.1rm.title" = "Enter Your 1RM";
+"bilbo.quick.increment" = "Quick select";

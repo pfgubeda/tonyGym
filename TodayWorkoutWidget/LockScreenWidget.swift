@@ -16,11 +16,11 @@ struct LockScreenProvider: TimelineProvider {
 
     func getSnapshot(in context: Context, completion: @escaping (LockScreenEntry) -> ()) {
         let today = Date()
-        let snapshot = readSnapshot() ?? placeholderSnapshot()
-        // Always use today's date, not the stored date
+        let snapshot = readTodaySnapshotFromFull() ?? readSnapshot() ?? placeholderSnapshot()
+        let weekday = calendarWeekday(today)
         let todaySnapshot = WidgetRoutineSnapshot(
             date: today,
-            weekday: snapshot.weekday,
+            weekday: weekday,
             routineName: snapshot.routineName,
             items: snapshot.items
         )
@@ -30,19 +30,19 @@ struct LockScreenProvider: TimelineProvider {
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<LockScreenEntry>) -> ()) {
         var entries: [LockScreenEntry] = []
-        let today = Date()
-        let snapshot = readSnapshot() ?? placeholderSnapshot()
-        // Always use today's date, not the stored date
+        let now = Date()
+        let snapshot = readTodaySnapshotFromFull() ?? readSnapshot() ?? placeholderSnapshot()
+        let weekday = calendarWeekday(now)
         let todaySnapshot = WidgetRoutineSnapshot(
-            date: today,
-            weekday: snapshot.weekday,
+            date: now,
+            weekday: weekday,
             routineName: snapshot.routineName,
             items: snapshot.items
         )
-        let entry = LockScreenEntry(date: today, snapshot: todaySnapshot)
+        let entry = LockScreenEntry(date: now, snapshot: todaySnapshot)
         entries.append(entry)
         
-        let timeline = Timeline(entries: entries, policy: .atEnd)
+        let timeline = Timeline(entries: entries, policy: .after(nextMidnight(from: now)))
         completion(timeline)
     }
     
@@ -55,6 +55,47 @@ struct LockScreenProvider: TimelineProvider {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         return try? decoder.decode(WidgetRoutineSnapshot.self, from: data)
+    }
+    
+    // MARK: - Full snapshot support
+    private struct FullRoutineSnapshot: Codable {
+        struct Item: Codable {
+            let title: String
+            let categoryRaw: Int
+            let weightKg: Double
+        }
+        let routineName: String
+        let itemsByWeekday: [Int: [Item]]
+        let generatedAt: Date
+    }
+    
+    private func readTodaySnapshotFromFull() -> WidgetRoutineSnapshot? {
+        guard let userDefaults = UserDefaults(suiteName: "group.com.pafego.TonyGym"),
+              let data = userDefaults.data(forKey: "routineFullSnapshot") else {
+            return nil
+        }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        guard let full = try? decoder.decode(FullRoutineSnapshot.self, from: data) else { return nil }
+        
+        let now = Date()
+        let weekday = calendarWeekday(now)
+        let items = (full.itemsByWeekday[weekday] ?? []).map { item in
+            WidgetRoutineItem(title: item.title, categoryRaw: item.categoryRaw, weightKg: item.weightKg)
+        }
+        return WidgetRoutineSnapshot(date: now, weekday: weekday, routineName: full.routineName, items: items)
+    }
+    
+    private func calendarWeekday(_ date: Date) -> Int {
+        let cal = Calendar.current
+        let w = cal.component(.weekday, from: date) // 1=Sunday
+        return w == 1 ? 7 : (w - 1)
+    }
+    
+    private func nextMidnight(from date: Date) -> Date {
+        let cal = Calendar.current
+        let start = cal.startOfDay(for: date)
+        return cal.date(byAdding: .day, value: 1, to: start) ?? date.addingTimeInterval(24 * 60 * 60)
     }
     
     private func placeholderSnapshot() -> WidgetRoutineSnapshot {

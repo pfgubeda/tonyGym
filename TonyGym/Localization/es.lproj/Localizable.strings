@@ -267,3 +267,41 @@
 "bilbo.stats.reps.progression" = "Progresión de Reps";
 "bilbo.stats.volume.progression" = "Progresión de Volumen";
 "bilbo.stats.no.data" = "No hay datos disponibles";
+
+/* Método BILBO por Ciclos */
+"bilbo.add.cycle" = "Añadir Ciclo";
+"bilbo.create.cycle" = "Crear Ciclo";
+"bilbo.cycle" = "Ciclo";
+"bilbo.cycle.settings" = "Configuración del Ciclo";
+"bilbo.initial.1rm" = "1RM Inicial";
+"bilbo.final.1rm" = "1RM Final";
+"bilbo.number.of.days" = "Número de días";
+"bilbo.increment" = "Incremento por día";
+"bilbo.day" = "Día";
+"bilbo.days" = "Días";
+"bilbo.target" = "Objetivo";
+"bilbo.target.weight" = "Peso objetivo";
+"bilbo.not.completed" = "No completado";
+"bilbo.cycle.completed" = "Ciclo completado";
+"bilbo.reset.cycle" = "Reiniciar ciclo";
+"bilbo.edit.day" = "Editar Día";
+"bilbo.valid.work" = "Trabajo válido";
+"bilbo.date" = "Fecha";
+"bilbo.estimated.1rm" = "1RM Estimado";
+"bilbo.cycle.preview" = "Vista Previa del Ciclo";
+"bilbo.calculate.from.history" = "Calcular desde historial";
+"common.create" = "Crear";
+"common.continue" = "Continuar";
+
+/* Descubrimiento de 1RM BILBO */
+"bilbo.discover.1rm.title" = "Descubre tu 1RM";
+"bilbo.discover.1rm.subtitle" = "Primero, descubramos tu repetición máxima para este ejercicio";
+"bilbo.discover.from.history" = "Calcular desde Historial";
+"bilbo.discover.from.history.description" = "Usa tu historial de entrenamientos para estimar automáticamente tu 1RM";
+"bilbo.discover.manual.test" = "Test Manual";
+"bilbo.discover.manual.test.description" = "Introduce peso y repeticiones para calcular tu 1RM usando fórmulas";
+"bilbo.discover.manual.entry" = "Introducir Manualmente";
+"bilbo.discover.manual.entry.description" = "Si ya conoces tu 1RM, introdúcelo directamente";
+"bilbo.enter.1rm" = "Introducir 1RM";
+"bilbo.enter.1rm.title" = "Introduce tu 1RM";
+"bilbo.quick.increment" = "Selección rápida";

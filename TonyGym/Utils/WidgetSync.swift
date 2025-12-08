@@ -5,6 +5,7 @@ enum WidgetSync {
     // NOTE: Set this App Group in both the app and the widget target capabilities
     private static let appGroupId = "group.com.pafego.TonyGym"
     private static let key = "todayRoutineSnapshot"
+    private static let fullKey = "routineFullSnapshot"
 
     static func writeTodaySnapshot(snapshot: WidgetRoutineSnapshot) {
         guard let defaults = UserDefaults(suiteName: appGroupId) else { return }
@@ -12,6 +13,55 @@ enum WidgetSync {
         encoder.dateEncodingStrategy = .iso8601
         if let data = try? encoder.encode(snapshot) {
             defaults.set(data, forKey: key)
+            defaults.synchronize()
+            if #available(iOS 14.0, *) {
+                WidgetCenter.shared.reloadAllTimelines()
+            }
+        }
+    }
+
+    /// Lightweight format the widget can use to compute today's content independently
+    struct FullRoutineSnapshot: Codable {
+        struct Item: Codable {
+            let title: String
+            let categoryRaw: Int
+            let weightKg: Double
+        }
+        // Map Weekday.rawValue (1..7) -> items for that day
+        let routineName: String
+        let itemsByWeekday: [Int: [Item]]
+        let generatedAt: Date
+    }
+
+    /// Write the entire routine once so the widget can pick today's items without launching the app
+    static func writeFullRoutineSnapshot(routineName: String, entries: [RoutineEntry]) {
+        guard let defaults = UserDefaults(suiteName: appGroupId) else { return }
+
+        // Build items grouped by weekday, sorted by order
+        var map: [Int: [FullRoutineSnapshot.Item]] = [:]
+        let sorted = entries.sorted { $0.order < $1.order }
+        for entry in sorted {
+            guard let ex = entry.exercise else { continue }
+            let item = FullRoutineSnapshot.Item(
+                title: ex.title,
+                categoryRaw: ex.category.rawValue,
+                weightKg: ex.defaultWeightKg
+            )
+            var arr = map[entry.weekday.rawValue] ?? []
+            arr.append(item)
+            map[entry.weekday.rawValue] = arr
+        }
+
+        let payload = FullRoutineSnapshot(
+            routineName: routineName,
+            itemsByWeekday: map,
+            generatedAt: Date()
+        )
+
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        if let data = try? encoder.encode(payload) {
+            defaults.set(data, forKey: fullKey)
             defaults.synchronize()
             if #available(iOS 14.0, *) {
                 WidgetCenter.shared.reloadAllTimelines()

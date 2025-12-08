@@ -148,10 +148,47 @@ struct OneRMCalculator {
         }
     }
     
+    // Discos típicos de gimnasio (kg)
+    static let typicalPlates: [Double] = [1.25, 2.5, 5, 10, 15, 20]
+    
     // Redondea a un incremento típico de discos (por defecto 1.25 kg)
-    static func roundToIncrement(_ value: Double, increment: Double = 1.25) -> Double {
-        guard increment > 0 else { return value }
-        return (value / increment).rounded() * increment
+    // Si se especifica un incremento, lo usa. Si no, redondea al disco típico más cercano
+    static func roundToIncrement(_ value: Double, increment: Double? = nil) -> Double {
+        guard value > 0 else { return 0 }
+        
+        // Si se especifica un incremento, usar ese
+        if let increment = increment, increment > 0 {
+            return (value / increment).rounded() * increment
+        }
+        
+        // Si no, redondear al disco típico más cercano
+        // El peso total debe ser múltiplo de 2.5 (barra + discos a ambos lados)
+        // Entonces redondeamos al múltiplo de 1.25 más cercano
+        return roundToTypicalPlate(value)
+    }
+    
+    // Redondea al disco típico más cercano
+    // Considera que los discos se usan en pares (ambos lados de la barra)
+    // Por lo tanto, el incremento mínimo es 2.5 kg (1.25 kg por lado)
+    static func roundToTypicalPlate(_ value: Double) -> Double {
+        guard value > 0 else { return 0 }
+        
+        // Redondear al múltiplo de 1.25 más cercano (ya que los discos se usan en pares)
+        let rounded = (value / 1.25).rounded() * 1.25
+        
+        // Asegurar que el resultado sea válido (mínimo 1.25 kg)
+        return max(1.25, rounded)
+    }
+    
+    // Obtiene el siguiente peso válido usando discos típicos
+    static func nextValidWeight(from weight: Double, increment: Double = 2.5) -> Double {
+        return roundToTypicalPlate(weight + increment)
+    }
+    
+    // Obtiene el peso anterior válido usando discos típicos
+    static func previousValidWeight(from weight: Double, decrement: Double = 2.5) -> Double {
+        let newWeight = weight - decrement
+        return max(0, roundToTypicalPlate(newWeight))
     }
     
     // Valida si los datos de entrenamiento son realistas

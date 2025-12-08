@@ -3,18 +3,27 @@ import SwiftData
 
 struct BilboView: View {
     @Environment(\.modelContext) private var context
-    @Query(sort: \BilboExercise.createdAt, order: .reverse) private var bilboExercises: [BilboExercise]
+    @Query(sort: \BilboCycle.createdAt, order: .reverse) private var bilboCycles: [BilboCycle]
     @Query(sort: \Exercise.title) private var exercises: [Exercise]
     
-    @State private var showingExercisePicker = false
-    @State private var selectedBilboExercise: BilboExercise?
+    @State private var showingCycleCreator = false
+    @State private var selectedCycle: BilboCycle?
     @State private var showingInstructions = false
-    @State private var selectedExerciseForOneRM: Exercise?
+    @State private var selectedExerciseForCycle: Exercise?
+    @State private var selectedExerciseForSetup: ExerciseSetupData?
+    
+    // Helper struct para pasar datos del ejercicio al setup
+    struct ExerciseSetupData: Identifiable {
+        let id = UUID()
+        let exercise: Exercise
+        let oneRM: Double
+        let formula: OneRMCalculator.Formula
+    }
     
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                if bilboExercises.isEmpty {
+                if bilboCycles.isEmpty {
                     emptyStateView
                 } else {
                     contentView
@@ -24,8 +33,8 @@ struct BilboView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
-                        Button(NSLocalizedString("bilbo.add.exercise", comment: "Add exercise")) {
-                            showingExercisePicker = true
+                        Button(NSLocalizedString("bilbo.add.cycle", comment: "Add cycle")) {
+                            showingCycleCreator = true
                         }
                         Button(NSLocalizedString("bilbo.instructions", comment: "Instructions")) {
                             showingInstructions = true
@@ -35,21 +44,39 @@ struct BilboView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showingExercisePicker) {
-                BilboExercisePickerView(exercises: exercises) { exercise in
-                    startOneRMFlow(exercise)
-                }
+            .sheet(isPresented: $showingCycleCreator) {
+                BilboCycleCreatorView(
+                    exercises: exercises,
+                    onSelect: { exercise in
+                        selectedExerciseForCycle = exercise
+                        showingCycleCreator = false
+                    },
+                    onCycleCreated: {
+                        showingCycleCreator = false
+                    }
+                )
             }
-            .sheet(item: $selectedBilboExercise) { bilboExercise in
-                BilboExerciseDetailView(bilboExercise: bilboExercise)
+            .sheet(item: $selectedCycle) { cycle in
+                BilboCycleDetailView(cycle: cycle)
             }
             .sheet(isPresented: $showingInstructions) {
                 BilboInstructionsView()
             }
-            .sheet(item: $selectedExerciseForOneRM) { exercise in
-                OneRMCalculatorView(exercise: exercise) { calculatedOneRM in
-                    addBilboExerciseWithCalculatedOneRM(exercise, oneRM: calculatedOneRM)
-                    selectedExerciseForOneRM = nil
+            .sheet(item: $selectedExerciseForCycle) { exercise in
+                BilboOneRMDiscoveryView(exercise: exercise) { oneRM, formula in
+                    // Una vez que se descubre el 1RM, mostrar la configuración del ciclo
+                    selectedExerciseForCycle = nil
+                    selectedExerciseForSetup = ExerciseSetupData(exercise: exercise, oneRM: oneRM, formula: formula)
+                }
+            }
+            .sheet(item: $selectedExerciseForSetup) { exerciseData in
+                BilboCycleSetupView(
+                    exercise: exerciseData.exercise,
+                    initialOneRM: exerciseData.oneRM,
+                    initialFormula: exerciseData.formula
+                ) { cycle in
+                    context.insert(cycle)
+                    selectedExerciseForSetup = nil
                 }
             }
         }
@@ -110,7 +137,7 @@ struct BilboView: View {
             
             // Botón para comenzar
             Button {
-                showingExercisePicker = true
+                showingCycleCreator = true
             } label: {
                 Text(NSLocalizedString("bilbo.start.method", comment: "Start BILBO method"))
                     .font(.headline)
@@ -128,12 +155,12 @@ struct BilboView: View {
     
     private var contentView: some View {
         List {
-            ForEach(bilboExercises) { bilboExercise in
-                BilboExerciseCard(bilboExercise: bilboExercise) {
-                    selectedBilboExercise = bilboExercise
+            ForEach(bilboCycles) { cycle in
+                BilboCycleCard(cycle: cycle) {
+                    selectedCycle = cycle
                 }
             }
-            .onDelete(perform: deleteBilboExercise)
+            .onDelete(perform: deleteCycle)
         }
         .listStyle(.plain)
     }
@@ -159,27 +186,147 @@ struct BilboView: View {
         }
     }
     
-    private func addBilboExercise(_ exercise: Exercise) {
-        let bilboExercise = BilboExercise(exercise: exercise, oneRepMax: exercise.defaultWeightKg * 2)
-        context.insert(bilboExercise)
-    }
-
-    private func startOneRMFlow(_ exercise: Exercise) {
-        // Set the item; parent will present the sheet once picker dismisses
-        selectedExerciseForOneRM = exercise
-    }
-    
-    // Crea un ejercicio BILBO usando un 1RM calculado
-    private func addBilboExerciseWithCalculatedOneRM(_ exercise: Exercise, oneRM: Double) {
-        let bilboExercise = BilboExercise(exercise: exercise, oneRepMax: oneRM, isAutoCalculated: true)
-        context.insert(bilboExercise)
-    }
-    
-    private func deleteBilboExercise(offsets: IndexSet) {
+    private func deleteCycle(offsets: IndexSet) {
         for index in offsets {
-            let bilboExercise = bilboExercises[index]
-            context.delete(bilboExercise)
+            let cycle = bilboCycles[index]
+            context.delete(cycle)
         }
+    }
+}
+
+// MARK: - BilboCycleCard
+struct BilboCycleCard: View {
+    let cycle: BilboCycle
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: onTap) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(cycle.exercise?.title ?? NSLocalizedString("bilbo.exercise.deleted", comment: "Deleted exercise"))
+                            .font(.headline)
+                            .foregroundStyle(.primary)
+                        
+                        if let exercise = cycle.exercise {
+                            Text(exercise.category.displayName)
+                                .font(.caption)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Capsule().fill(exercise.category.color.opacity(0.2)))
+                                .foregroundStyle(exercise.category.color)
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    VStack(alignment: .trailing, spacing: 4) {
+                        if cycle.isCompleted, let finalOneRM = cycle.finalOneRM {
+                            Text(formatWeightDisplay(finalOneRM))
+                                .font(.title3)
+                                .fontWeight(.bold)
+                                .foregroundStyle(.green)
+                            Text(NSLocalizedString("bilbo.final.1rm", comment: "Final 1RM"))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        } else if let currentDay = cycle.currentDay {
+                            Text(formatWeightDisplay(currentDay.targetWeight))
+                                .font(.title3)
+                                .fontWeight(.bold)
+                                .foregroundStyle(.blue)
+                            Text(NSLocalizedString("bilbo.day", comment: "Day") + " \(currentDay.dayNumber)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        } else {
+                            Text(formatWeightDisplay(cycle.initialOneRM))
+                                .font(.title3)
+                                .fontWeight(.bold)
+                                .foregroundStyle(.blue)
+                            Text(NSLocalizedString("bilbo.initial.1rm", comment: "Initial 1RM"))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(NSLocalizedString("bilbo.initial.1rm", comment: "Initial 1RM"))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Text(formatWeightDisplay(cycle.initialOneRM))
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                    }
+                    
+                    Spacer()
+                    
+                    VStack(alignment: .center, spacing: 2) {
+                        Text(NSLocalizedString("bilbo.progress", comment: "Progress"))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Text(String(format: "%.0f%%", cycle.progress * 100))
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundStyle(.blue)
+                    }
+                    
+                    Spacer()
+                    
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text(NSLocalizedString("bilbo.days", comment: "Days"))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Text("\(cycle.days.filter { $0.isCompleted }.count)/\(cycle.numberOfDays)")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                    }
+                }
+                
+                // Progress Bar
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.gray.opacity(0.2))
+                            .frame(height: 8)
+                        
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(
+                                LinearGradient(
+                                    colors: cycle.isCompleted ? [.green, .mint] : [.blue, .cyan],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .frame(width: geometry.size.width * min(1.0, max(0.0, cycle.progress)), height: 8)
+                    }
+                }
+                .frame(height: 8)
+                
+                if cycle.isCompleted {
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                        Text(NSLocalizedString("bilbo.cycle.completed", comment: "Cycle completed"))
+                            .font(.caption)
+                            .foregroundStyle(.green)
+                            .fontWeight(.medium)
+                        if let completedAt = cycle.completedAt {
+                            Text(" • \(completedAt, style: .date)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(.systemBackground))
+                    .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+            )
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -411,8 +558,10 @@ struct BilboExercisePickerView: View {
             }
             .sheet(isPresented: $showingOneRMCalculator) {
                 if let exercise = selectedExercise {
-                    OneRMCalculatorView(exercise: exercise) { calculatedOneRM in
-                        addBilboExerciseWithCalculatedOneRM(exercise, oneRM: calculatedOneRM)
+                    OneRMCalculatorView(exercise: exercise) { calculatedOneRM, formula in
+                        // Asegurar que el 1RM esté redondeado a discos típicos
+                        let roundedOneRM = OneRMCalculator.roundToTypicalPlate(calculatedOneRM)
+                        addBilboExerciseWithCalculatedOneRM(exercise, oneRM: roundedOneRM)
                         dismiss()
                     }
                 }
@@ -521,30 +670,11 @@ struct BilboSessionLogView: View {
                         TextField("kg", value: $weightUsed, format: .number)
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
+                            .onSubmit {
+                                weightUsed = OneRMCalculator.roundToTypicalPlate(weightUsed)
+                            }
                     }
-                    HStack(spacing: 12) {
-                        Button(action: { weightUsed = max(0, OneRMCalculator.roundToIncrement(weightUsed - 2.5)) }) {
-                            Text("-2.5")
-                        }
-                        .buttonStyle(.bordered)
-                        
-                        Button(action: { weightUsed = max(0, OneRMCalculator.roundToIncrement(weightUsed - 1.25)) }) {
-                            Text("-1.25")
-                        }
-                        .buttonStyle(.bordered)
-
-                        Spacer()
-
-                        Button(action: { weightUsed = OneRMCalculator.roundToIncrement(weightUsed + 1.25) }) {
-                            Text("+1.25")
-                        }
-                        .buttonStyle(.bordered)
-                        
-                        Button(action: { weightUsed = OneRMCalculator.roundToIncrement(weightUsed + 2.5) }) {
-                            Text("+2.5")
-                        }
-                        .buttonStyle(.bordered)
-                    }
+                    WeightAdjustmentButtons(weight: $weightUsed)
                     
                     HStack {
                         Text(NSLocalizedString("bilbo.reps.completed", comment: "Reps completed"))
@@ -656,6 +786,9 @@ struct OneRMEditorView: View {
                         TextField("kg", value: $newOneRM, format: .number)
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
+                            .onSubmit {
+                                newOneRM = OneRMCalculator.roundToTypicalPlate(newOneRM)
+                            }
                     }
                 }
                 
@@ -694,7 +827,7 @@ struct OneRMEditorView: View {
             }
         }
         .sheet(isPresented: $showingManualTest) {
-            ManualOneRMTestView { calculated in
+            ManualOneRMTestView { calculated, formula in
                 newOneRM = calculated
             }
         }
@@ -786,7 +919,7 @@ struct BilboInstructionsView: View {
 
 struct OneRMCalculatorView: View {
     let exercise: Exercise
-    let onCalculate: (Double) -> Void
+    let onCalculate: (Double, OneRMCalculator.Formula) -> Void
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
     @Query(sort: \WorkoutLog.date, order: .reverse) private var workoutLogs: [WorkoutLog]
@@ -856,7 +989,9 @@ struct OneRMCalculatorView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(NSLocalizedString("bilbo.calculator.use", comment: "Use this 1RM")) {
-                        onCalculate(calculatedOneRM)
+                        // Asegurar que el 1RM esté redondeado a discos típicos
+                        let roundedOneRM = OneRMCalculator.roundToTypicalPlate(calculatedOneRM)
+                        onCalculate(roundedOneRM, selectedFormula)
                     }
                     .disabled(calculatedOneRM <= 0)
                 }
@@ -868,8 +1003,8 @@ struct OneRMCalculatorView: View {
                 calculateOneRM()
             }
             .sheet(isPresented: $showingManualTest) {
-                ManualOneRMTestView { calculated in
-                    onCalculate(calculated)
+                ManualOneRMTestView { calculated, formula in
+                    onCalculate(calculated, formula)
                 }
             }
         }
@@ -999,7 +1134,7 @@ struct OneRMCalculatorView: View {
                 .fontWeight(.semibold)
             
             VStack(spacing: 8) {
-                Text(String(format: "%.2f kg", calculatedOneRM))
+                Text(formatWeightDisplay(calculatedOneRM))
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .foregroundStyle(.blue)
@@ -1008,7 +1143,7 @@ struct OneRMCalculatorView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                 
-                Text(String(format: "%.2f kg", OneRMCalculator.calculateBilboWeight(oneRM: calculatedOneRM)))
+                Text(formatWeightDisplay(OneRMCalculator.calculateBilboWeight(oneRM: calculatedOneRM)))
                     .font(.title2)
                     .fontWeight(.semibold)
                     .foregroundStyle(.green)
@@ -1094,7 +1229,9 @@ struct OneRMCalculatorView: View {
             return
         }
         
-        calculatedOneRM = OneRMCalculator.findRecentReliableOneRM(from: workoutData, formula: selectedFormula)
+        let rawOneRM = OneRMCalculator.findRecentReliableOneRM(from: workoutData, formula: selectedFormula)
+        // Redondear a discos típicos del gimnasio
+        calculatedOneRM = OneRMCalculator.roundToTypicalPlate(rawOneRM)
     }
 }
 
@@ -1614,7 +1751,6 @@ struct ChartView: View {
                 } else if data.count == 1 {
                     let point = data[0]
                     let range = maxValue - minValue
-                    let timeRange = maxTime - minTime
                     let x = geometry.size.width / 2
                     let y = range > 0 ? geometry.size.height - (CGFloat((point.1 - minValue) / range) * geometry.size.height) : geometry.size.height / 2
                     
@@ -1641,9 +1777,858 @@ struct ChartView: View {
     }
 }
 
+// MARK: - BilboCycleCreatorView
+struct BilboCycleCreatorView: View {
+    let exercises: [Exercise]
+    let onSelect: (Exercise) -> Void
+    let onCycleCreated: () -> Void
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var context
+    @Query(sort: \WorkoutLog.date, order: .reverse) private var workoutLogs: [WorkoutLog]
+    @State private var selectedFilter: ExerciseCategory? = nil
+    @State private var showingOneRMCalculator = false
+    @State private var selectedExercise: Exercise?
+    
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 8) {
+                categoryFilterBar
+                List(filteredExercises()) { exercise in
+                    HStack {
+                        Button {
+                            onSelect(exercise)
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(exercise.title)
+                                        .font(.headline)
+                                        .foregroundStyle(.primary)
+                                    
+                                    Text(exercise.details)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(2)
+                                }
+                                
+                                Spacer()
+                                
+                                VStack(alignment: .trailing, spacing: 4) {
+                                    Text(exercise.category.displayName)
+                                        .font(.caption)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(Capsule().fill(exercise.category.color.opacity(0.2)))
+                                        .foregroundStyle(exercise.category.color)
+                                }
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        
+                        // Botón para calcular 1RM automáticamente
+                        if hasWorkoutHistory(for: exercise) {
+                            Button {
+                                selectedExercise = exercise
+                                showingOneRMCalculator = true
+                            } label: {
+                                Image(systemName: "calculator")
+                                    .foregroundStyle(.blue)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+            }
+            .navigationTitle(NSLocalizedString("bilbo.select.exercise", comment: "Select exercise for BILBO"))
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(NSLocalizedString("common.cancel", comment: "Cancel")) { dismiss() }
+                }
+            }
+            .sheet(isPresented: $showingOneRMCalculator) {
+                if let exercise = selectedExercise {
+                    OneRMCalculatorView(exercise: exercise) { calculatedOneRM, formula in
+                        // Cuando se calcula el 1RM, crear el ciclo directamente
+                        // Asegurar que el 1RM esté redondeado a discos típicos
+                        let roundedOneRM = OneRMCalculator.roundToTypicalPlate(calculatedOneRM)
+                        let cycle = BilboCycle(
+                            exercise: exercise,
+                            initialOneRM: roundedOneRM,
+                            numberOfDays: 30,
+                            increment: 2.5, // Incremento por defecto: 2.5 kg (disco típico)
+                            notes: ""
+                        )
+                        cycle.oneRMFormula = formula.rawValue
+                        context.insert(cycle)
+                        selectedExercise = nil
+                        showingOneRMCalculator = false
+                        onCycleCreated()
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+    
+    // Verifica si un ejercicio tiene historial de entrenamientos
+    private func hasWorkoutHistory(for exercise: Exercise) -> Bool {
+        return workoutLogs.contains { $0.exercise?.persistentModelID == exercise.persistentModelID }
+    }
+    
+    private var categoryFilterBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                filterChip(label: NSLocalizedString("exercise.filter.all", comment: "All filter"), isSelected: selectedFilter == nil) { selectedFilter = nil }
+                ForEach(ExerciseCategory.allCases) { cat in
+                    filterChip(label: cat.displayName, category: cat, isSelected: selectedFilter == cat) { selectedFilter = cat }
+                }
+            }
+            .padding(.horizontal)
+        }
+    }
+    
+    private func filterChip(label: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(label)
+                .font(.caption)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Capsule().fill(isSelected ? Color.accentColor.opacity(0.2) : Color.secondary.opacity(0.12)))
+                .overlay(Capsule().stroke(isSelected ? Color.accentColor : Color.secondary.opacity(0.3), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+    }
+    
+    private func filterChip(label: String, category: ExerciseCategory, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(label)
+                .font(.caption)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Capsule().fill(isSelected ? category.color.opacity(0.3) : category.color.opacity(0.1)))
+                .overlay(Capsule().stroke(isSelected ? category.color : category.color.opacity(0.5), lineWidth: 1))
+                .foregroundStyle(isSelected ? category.color : category.color.opacity(0.8))
+        }
+        .buttonStyle(.plain)
+    }
+    
+    private func filteredExercises() -> [Exercise] {
+        guard let selectedFilter else { return exercises }
+        return exercises.filter { $0.category == selectedFilter }
+    }
+}
+
+// MARK: - BilboOneRMDiscoveryView
+struct BilboOneRMDiscoveryView: View {
+    let exercise: Exercise
+    let onComplete: (Double, OneRMCalculator.Formula) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @Query(sort: \WorkoutLog.date, order: .reverse) private var workoutLogs: [WorkoutLog]
+    
+    @State private var showingOneRMCalculator = false
+    @State private var showingManualTest = false
+    @State private var showingManualEntry = false
+    @State private var manualOneRM: Double = 0
+    
+    private var exerciseWorkoutLogs: [WorkoutLog] {
+        workoutLogs.filter { $0.exercise?.persistentModelID == exercise.persistentModelID }
+    }
+    
+    private var hasWorkoutHistory: Bool {
+        !exerciseWorkoutLogs.isEmpty
+    }
+    
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Header
+                    VStack(spacing: 12) {
+                        Image(systemName: "figure.strengthtraining.traditional")
+                            .font(.system(size: 50))
+                            .foregroundStyle(.blue)
+                        
+                        Text(exercise.title)
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        Text(NSLocalizedString("bilbo.discover.1rm.subtitle", comment: "Discover your 1RM to start"))
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(.top)
+                    
+                    // Opciones para descubrir el 1RM
+                    VStack(spacing: 16) {
+                        // Opción 1: Calcular desde historial
+                        if hasWorkoutHistory {
+                            discoveryOptionCard(
+                                icon: "chart.line.uptrend.xyaxis",
+                                title: NSLocalizedString("bilbo.discover.from.history", comment: "Calculate from history"),
+                                description: NSLocalizedString("bilbo.discover.from.history.description", comment: "Use your workout history to estimate 1RM"),
+                                color: .blue
+                            ) {
+                                showingOneRMCalculator = true
+                            }
+                        }
+                        
+                        // Opción 2: Test manual
+                        discoveryOptionCard(
+                            icon: "dumbbell.fill",
+                            title: NSLocalizedString("bilbo.discover.manual.test", comment: "Manual test"),
+                            description: NSLocalizedString("bilbo.discover.manual.test.description", comment: "Enter weight and reps to calculate 1RM"),
+                            color: .green
+                        ) {
+                            showingManualTest = true
+                        }
+                        
+                        // Opción 3: Introducir manualmente
+                        discoveryOptionCard(
+                            icon: "pencil",
+                            title: NSLocalizedString("bilbo.discover.manual.entry", comment: "Enter manually"),
+                            description: NSLocalizedString("bilbo.discover.manual.entry.description", comment: "If you already know your 1RM"),
+                            color: .orange
+                        ) {
+                            showingManualEntry = true
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+                .padding()
+            }
+            .navigationTitle(NSLocalizedString("bilbo.discover.1rm.title", comment: "Discover Your 1RM"))
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(NSLocalizedString("common.cancel", comment: "Cancel")) { dismiss() }
+                }
+            }
+            .sheet(isPresented: $showingOneRMCalculator) {
+                OneRMCalculatorView(exercise: exercise) { calculatedOneRM, formula in
+                    // Asegurar que el 1RM esté redondeado a discos típicos
+                    let roundedOneRM = OneRMCalculator.roundToTypicalPlate(calculatedOneRM)
+                    onComplete(roundedOneRM, formula)
+                    dismiss()
+                }
+            }
+            .sheet(isPresented: $showingManualTest) {
+                ManualOneRMTestView { calculatedOneRM, formula in
+                    // Asegurar que el 1RM esté redondeado a discos típicos
+                    let roundedOneRM = OneRMCalculator.roundToTypicalPlate(calculatedOneRM)
+                    onComplete(roundedOneRM, formula)
+                    dismiss()
+                }
+            }
+            .sheet(isPresented: $showingManualEntry) {
+                ManualOneRMEntryView(exercise: exercise) { oneRM in
+                    onComplete(oneRM, .epley)
+                    dismiss()
+                }
+            }
+        }
+    }
+    
+    private func discoveryOptionCard(
+        icon: String,
+        title: String,
+        description: String,
+        color: Color,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 16) {
+                Image(systemName: icon)
+                    .font(.title2)
+                    .foregroundStyle(color)
+                    .frame(width: 50, height: 50)
+                    .background(Circle().fill(color.opacity(0.1)))
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                    
+                    Text(description)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .foregroundStyle(.secondary)
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(.systemBackground))
+                    .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - ManualOneRMEntryView
+struct ManualOneRMEntryView: View {
+    let exercise: Exercise
+    let onComplete: (Double) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var oneRM: Double = 0
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    HStack {
+                        Text(exercise.title)
+                            .font(.headline)
+                        Spacer()
+                    }
+                }
+                
+                Section(NSLocalizedString("bilbo.enter.1rm", comment: "Enter 1RM")) {
+                    HStack {
+                        Text(NSLocalizedString("bilbo.initial.1rm", comment: "Initial 1RM"))
+                        Spacer()
+                        TextField("kg", value: $oneRM, format: .number)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .onSubmit {
+                                oneRM = OneRMCalculator.roundToTypicalPlate(oneRM)
+                            }
+                    }
+                }
+            }
+            .navigationTitle(NSLocalizedString("bilbo.enter.1rm.title", comment: "Enter 1RM"))
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(NSLocalizedString("common.cancel", comment: "Cancel")) { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(NSLocalizedString("common.continue", comment: "Continue")) {
+                        if oneRM > 0 {
+                            onComplete(oneRM)
+                        }
+                    }
+                    .disabled(oneRM <= 0)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - BilboCycleSetupView
+struct BilboCycleSetupView: View {
+    let exercise: Exercise
+    let initialOneRM: Double?
+    let initialFormula: OneRMCalculator.Formula?
+    let onComplete: (BilboCycle) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var context
+    
+    @State private var oneRM: Double = 0
+    @State private var numberOfDays: Int = 30
+    @State private var increment: Double = 2.5
+    @State private var notes: String = ""
+    @State private var selectedFormula: OneRMCalculator.Formula = .epley
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    HStack {
+                        Text(NSLocalizedString("bilbo.exercise", comment: "Exercise"))
+                        Spacer()
+                        Text(exercise.title)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                
+                Section(NSLocalizedString("bilbo.cycle.settings", comment: "Cycle Settings")) {
+                    HStack {
+                        Text(NSLocalizedString("bilbo.initial.1rm", comment: "Initial 1RM"))
+                        Spacer()
+                        TextField("kg", value: $oneRM, format: .number)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                    }
+                    
+                    HStack {
+                        Text(NSLocalizedString("bilbo.number.of.days", comment: "Number of days"))
+                        Spacer()
+                        Stepper("\(numberOfDays)", value: $numberOfDays, in: 1...100)
+                    }
+                    
+                    HStack {
+                        Text(NSLocalizedString("bilbo.increment", comment: "Increment per day"))
+                        Spacer()
+                        TextField("kg", value: $increment, format: .number)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .onSubmit {
+                                // Redondear a valores típicos de incremento (1.25, 2.5, 5)
+                                if increment > 0 {
+                                    increment = OneRMCalculator.roundToTypicalPlate(increment)
+                                }
+                            }
+                    }
+                    
+                    // Selector rápido de incrementos comunes
+                    HStack {
+                        Text(NSLocalizedString("bilbo.quick.increment", comment: "Quick select"))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        ForEach([1.25, 2.5, 5.0], id: \.self) { value in
+                            Button(value.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", value) : String(format: "%.2f", value)) {
+                                increment = value
+                            }
+                            .font(.caption)
+                            .buttonStyle(.bordered)
+                            .tint(increment == value ? .blue : .secondary)
+                        }
+                    }
+                }
+                
+                Section(NSLocalizedString("bilbo.notes", comment: "Notes")) {
+                    TextField(NSLocalizedString("bilbo.notes.placeholder", comment: "Optional notes"), text: $notes, axis: .vertical)
+                        .lineLimit(3...6)
+                }
+                
+                Section {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(NSLocalizedString("bilbo.cycle.preview", comment: "Cycle Preview"))
+                            .font(.headline)
+                        
+                        if oneRM > 0 {
+                            VStack(alignment: .leading, spacing: 4) {
+                                let day1Weight = OneRMCalculator.roundToTypicalPlate(oneRM)
+                                let lastDayWeight = OneRMCalculator.roundToTypicalPlate(oneRM + (Double(numberOfDays - 1) * increment))
+                                Text(NSLocalizedString("bilbo.day", comment: "Day") + " 1: \(formatWeightDisplay(day1Weight))")
+                                Text(NSLocalizedString("bilbo.day", comment: "Day") + " \(numberOfDays): \(formatWeightDisplay(lastDayWeight))")
+                            }
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+            .navigationTitle(NSLocalizedString("bilbo.create.cycle", comment: "Create Cycle"))
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(NSLocalizedString("common.cancel", comment: "Cancel")) { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(NSLocalizedString("common.create", comment: "Create")) {
+                        createCycle()
+                    }
+                    .disabled(oneRM <= 0 || numberOfDays <= 0 || increment <= 0)
+                }
+            }
+            .onAppear {
+                if let initialOneRM = initialOneRM {
+                    oneRM = initialOneRM
+                } else {
+                    oneRM = exercise.defaultWeightKg * 2
+                }
+                if let initialFormula = initialFormula {
+                    selectedFormula = initialFormula
+                }
+            }
+        }
+    }
+    
+    private func createCycle() {
+        let cycle = BilboCycle(
+            exercise: exercise,
+            initialOneRM: oneRM,
+            numberOfDays: numberOfDays,
+            increment: increment,
+            notes: notes
+        )
+        cycle.oneRMFormula = selectedFormula.rawValue
+        onComplete(cycle)
+        dismiss()
+    }
+}
+
+// MARK: - BilboCycleDetailView
+struct BilboCycleDetailView: View {
+    let cycle: BilboCycle
+    @Environment(\.dismiss) private var dismiss
+    @State private var selectedDay: BilboDay?
+    @State private var showingDayEditor = false
+    
+    private var sortedDays: [BilboDay] {
+        cycle.days.sorted { $0.dayNumber < $1.dayNumber }
+    }
+    
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Header
+                    cycleHeader
+                    
+                    // Days List
+                    daysList
+                }
+                .padding()
+            }
+            .navigationTitle(cycle.exercise?.title ?? NSLocalizedString("bilbo.cycle", comment: "Cycle"))
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(NSLocalizedString("common.done", comment: "Done")) { dismiss() }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Menu {
+                        Button(NSLocalizedString("bilbo.reset.cycle", comment: "Reset cycle"), role: .destructive) {
+                            cycle.resetCycle()
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                }
+            }
+            .sheet(item: $selectedDay) { day in
+                BilboDayEditorView(day: day) {
+                    selectedDay = nil
+                }
+            }
+        }
+    }
+    
+    private var cycleHeader: some View {
+        VStack(spacing: 16) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(NSLocalizedString("bilbo.initial.1rm", comment: "Initial 1RM"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(formatWeightDisplay(cycle.initialOneRM))
+                        .font(.title2)
+                        .fontWeight(.bold)
+                }
+                
+                Spacer()
+                
+                if cycle.isCompleted, let finalOneRM = cycle.finalOneRM {
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text(NSLocalizedString("bilbo.final.1rm", comment: "Final 1RM"))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Text(formatWeightDisplay(finalOneRM))
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .foregroundStyle(.green)
+                    }
+                }
+            }
+            
+            // Progress Bar
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text(NSLocalizedString("bilbo.progress", comment: "Progress"))
+                        .font(.headline)
+                    Spacer()
+                    Text("\(cycle.days.filter { $0.isCompleted }.count)/\(cycle.numberOfDays)")
+                        .font(.headline)
+                }
+                
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.gray.opacity(0.2))
+                            .frame(height: 12)
+                        
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(
+                                LinearGradient(
+                                    colors: cycle.isCompleted ? [.green, .mint] : [.blue, .cyan],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .frame(width: geometry.size.width * min(1.0, max(0.0, cycle.progress)), height: 12)
+                    }
+                }
+                .frame(height: 12)
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemGray6))
+        )
+    }
+    
+    private var daysList: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(NSLocalizedString("bilbo.days", comment: "Days"))
+                .font(.headline)
+                .padding(.horizontal)
+            
+            ForEach(sortedDays) { day in
+                BilboDayRow(day: day) {
+                    selectedDay = day
+                }
+            }
+        }
+    }
+}
+
+// MARK: - BilboDayRow
+struct BilboDayRow: View {
+    let day: BilboDay
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: onTap) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(NSLocalizedString("bilbo.day", comment: "Day") + " \(day.dayNumber)")
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                    
+                    if day.isCompleted, let date = day.date {
+                        Text(date, style: .date)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text(NSLocalizedString("bilbo.not.completed", comment: "Not completed"))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                
+                Spacer()
+                
+                VStack(alignment: .trailing, spacing: 4) {
+                    if day.isCompleted {
+                        Text("\(formatWeightDisplay(day.actualWeight)) × \(day.repsCompleted)")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundStyle(.green)
+                        
+                        if let estimatedOneRM = day.estimatedOneRM {
+                            Text("1RM: \(formatWeightDisplay(estimatedOneRM))")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    } else {
+                        Text(formatWeightDisplay(day.targetWeight))
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundStyle(.blue)
+                        Text(NSLocalizedString("bilbo.target", comment: "Target"))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                
+                Image(systemName: day.isCompleted ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(day.isCompleted ? .green : .gray)
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(day.isCompleted ? Color.green.opacity(0.1) : Color(.systemBackground))
+                    .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - BilboDayEditorView
+struct BilboDayEditorView: View {
+    let day: BilboDay
+    let onSave: () -> Void
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var context
+    
+    @State private var actualWeight: Double
+    @State private var repsCompleted: Int = 0
+    @State private var isValidWork: Bool = true
+    @State private var date: Date = .now
+    @State private var notes: String = ""
+    
+    init(day: BilboDay, onSave: @escaping () -> Void) {
+        self.day = day
+        self.onSave = onSave
+        self._actualWeight = State(initialValue: day.actualWeight > 0 ? day.actualWeight : day.targetWeight)
+        self._repsCompleted = State(initialValue: day.repsCompleted > 0 ? day.repsCompleted : 0)
+        self._isValidWork = State(initialValue: day.isValidWork)
+        self._date = State(initialValue: day.date ?? .now)
+        self._notes = State(initialValue: day.notes)
+    }
+    
+    private var estimatedOneRM: Double? {
+        guard actualWeight > 0, repsCompleted > 0 else { return nil }
+        let formula = OneRMCalculator.Formula(rawValue: day.cycle?.oneRMFormula ?? OneRMCalculator.Formula.epley.rawValue) ?? .epley
+        return OneRMCalculator.calculateOneRM(weight: actualWeight, reps: repsCompleted, formula: formula)
+    }
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    HStack {
+                        Text(NSLocalizedString("bilbo.day", comment: "Day"))
+                        Spacer()
+                        Text("\(day.dayNumber)")
+                            .foregroundStyle(.secondary)
+                    }
+                    
+                    HStack {
+                        Text(NSLocalizedString("bilbo.target.weight", comment: "Target weight"))
+                        Spacer()
+                        Text(formatWeightDisplay(day.targetWeight))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                
+                Section(NSLocalizedString("bilbo.session.data", comment: "Session data")) {
+                    HStack {
+                        Text(NSLocalizedString("bilbo.weight.used", comment: "Weight used"))
+                        Spacer()
+                        TextField("kg", value: $actualWeight, format: .number)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .onSubmit {
+                                actualWeight = OneRMCalculator.roundToTypicalPlate(actualWeight)
+                            }
+                    }
+                    
+                    WeightAdjustmentButtons(weight: $actualWeight)
+                    
+                    HStack {
+                        Text(NSLocalizedString("bilbo.reps.completed", comment: "Reps completed"))
+                        Spacer()
+                        Stepper("\(repsCompleted)", value: $repsCompleted, in: 0...100)
+                    }
+                    
+                    Toggle(NSLocalizedString("bilbo.valid.work", comment: "Valid work"), isOn: $isValidWork)
+                    
+                    DatePicker(NSLocalizedString("bilbo.date", comment: "Date"), selection: $date, displayedComponents: .date)
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(NSLocalizedString("bilbo.notes", comment: "Notes"))
+                        TextField(NSLocalizedString("bilbo.notes.placeholder", comment: "Session notes"), text: $notes, axis: .vertical)
+                            .lineLimit(3...6)
+                    }
+                }
+                
+                if let estimatedOneRM = estimatedOneRM {
+                    Section(NSLocalizedString("bilbo.estimated.1rm", comment: "Estimated 1RM")) {
+                        HStack {
+                            Text(NSLocalizedString("bilbo.estimated.1rm", comment: "Estimated 1RM"))
+                            Spacer()
+                            Text(formatWeightDisplay(estimatedOneRM))
+                                .font(.headline)
+                                .foregroundStyle(.blue)
+                        }
+                    }
+                }
+            }
+            .navigationTitle(NSLocalizedString("bilbo.edit.day", comment: "Edit Day"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(NSLocalizedString("common.cancel", comment: "Cancel")) { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(NSLocalizedString("common.save", comment: "Save")) {
+                        saveDay()
+                    }
+                    .disabled(actualWeight <= 0 || repsCompleted <= 0)
+                }
+            }
+        }
+    }
+    
+    private func saveDay() {
+        let formula = OneRMCalculator.Formula(rawValue: day.cycle?.oneRMFormula ?? OneRMCalculator.Formula.epley.rawValue) ?? .epley
+        day.complete(
+            actualWeight: actualWeight,
+            repsCompleted: repsCompleted,
+            isValidWork: isValidWork,
+            date: date,
+            notes: notes,
+            formula: formula
+        )
+        onSave()
+        dismiss()
+    }
+}
+
+// MARK: - WeightAdjustmentButtons
+struct WeightAdjustmentButtons: View {
+    @Binding var weight: Double
+    
+    // Discos típicos de gimnasio (kg) - incrementos comunes
+    // Nota: Los incrementos representan el cambio total (ambos lados de la barra)
+    // Por ejemplo, +2.5 kg significa +1.25 kg por lado
+    private let increments: [Double] = [1.25, 2.5, 5, 10]
+    
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                // Botones de decremento
+                ForEach(increments.reversed(), id: \.self) { increment in
+                    Button(action: {
+                        let newWeight = weight - increment
+                        weight = max(0, OneRMCalculator.roundToTypicalPlate(newWeight))
+                    }) {
+                        Text("-\(formatIncrement(increment))")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .frame(minWidth: 50)
+                    }
+                    .buttonStyle(.bordered)
+                }
+                
+                Spacer()
+                
+                // Botones de incremento
+                ForEach(increments, id: \.self) { increment in
+                    Button(action: {
+                        weight = OneRMCalculator.roundToTypicalPlate(weight + increment)
+                    }) {
+                        Text("+\(formatIncrement(increment))")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .frame(minWidth: 50)
+                    }
+                    .buttonStyle(.bordered)
+                }
+            }
+            .padding(.horizontal, 4)
+        }
+    }
+    
+    private func formatIncrement(_ value: Double) -> String {
+        if value.truncatingRemainder(dividingBy: 1) == 0 {
+            return String(format: "%.0f", value)
+        } else {
+            return String(format: "%.2f", value)
+        }
+    }
+}
+
+// MARK: - Helper Functions
+func formatWeightDisplay(_ weight: Double) -> String {
+    let rounded = OneRMCalculator.roundToTypicalPlate(weight)
+    if rounded.truncatingRemainder(dividingBy: 1) == 0 {
+        return String(format: "%.0f kg", rounded)
+    } else {
+        return String(format: "%.2f kg", rounded)
+    }
+}
+
 #Preview {
     BilboView()
-        .modelContainer(for: [BilboExercise.self, BilboSession.self, Exercise.self])
+        .modelContainer(for: [BilboCycle.self, BilboDay.self, BilboExercise.self, BilboSession.self, Exercise.self])
 }
 
 // Manual 1RM test: user enters weight and reps to estimate 1RM
@@ -1654,15 +2639,18 @@ struct ManualOneRMTestView: View {
     @State private var selectedFormula: OneRMCalculator.Formula = .epley
     @State private var averageAcrossFormulas: Bool = false
     @State private var showingFormulaInfo: Bool = false
-    let onCalculate: (Double) -> Void
+    let onCalculate: (Double, OneRMCalculator.Formula) -> Void
 
     private var calculatedOneRM: Double {
         guard weight > 0, reps > 0 else { return 0 }
+        let rawOneRM: Double
         if averageAcrossFormulas {
-            return OneRMCalculator.calculateAverageOneRM(weight: weight, reps: reps)
+            rawOneRM = OneRMCalculator.calculateAverageOneRM(weight: weight, reps: reps)
         } else {
-            return OneRMCalculator.calculateOneRM(weight: weight, reps: reps, formula: selectedFormula)
+            rawOneRM = OneRMCalculator.calculateOneRM(weight: weight, reps: reps, formula: selectedFormula)
         }
+        // Redondear a discos típicos del gimnasio
+        return OneRMCalculator.roundToTypicalPlate(rawOneRM)
     }
 
     var body: some View {
@@ -1675,6 +2663,10 @@ struct ManualOneRMTestView: View {
                         TextField("kg", value: $weight, format: .number)
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
+                            .onSubmit {
+                                // Redondear solo cuando el usuario termine de escribir
+                                weight = OneRMCalculator.roundToTypicalPlate(weight)
+                            }
                     }
                     HStack {
                         Text(NSLocalizedString("bilbo.manual.reps", comment: "Reps"))
@@ -1700,14 +2692,14 @@ struct ManualOneRMTestView: View {
                         HStack {
                             Text(NSLocalizedString("bilbo.calculator.result", comment: "Calculated 1RM"))
                             Spacer()
-                            Text(String(format: "%.1f kg", calculatedOneRM))
+                            Text(formatWeightDisplay(calculatedOneRM))
                                 .font(.headline)
                                 .foregroundStyle(.blue)
                         }
                         HStack {
                             Text(NSLocalizedString("bilbo.calculator.bilbo.weight", comment: "BILBO training weight"))
                             Spacer()
-                            Text(String(format: "%.1f kg", OneRMCalculator.calculateBilboWeight(oneRM: calculatedOneRM)))
+                            Text(formatWeightDisplay(OneRMCalculator.calculateBilboWeight(oneRM: calculatedOneRM)))
                                 .font(.headline)
                                 .foregroundStyle(.green)
                         }
@@ -1755,7 +2747,14 @@ struct ManualOneRMTestView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(NSLocalizedString("bilbo.manual.use", comment: "Use 1RM")) {
-                        onCalculate(calculatedOneRM)
+                        // Redondear el peso antes de calcular
+                        let roundedWeight = OneRMCalculator.roundToTypicalPlate(weight)
+                        weight = roundedWeight
+                        
+                        // El calculatedOneRM ya está redondeado en la propiedad calculada
+                        // Si usa promedio, usar epley como fórmula por defecto
+                        let formula = averageAcrossFormulas ? .epley : selectedFormula
+                        onCalculate(calculatedOneRM, formula)
                         dismiss()
                     }
                     .disabled(calculatedOneRM <= 0)
