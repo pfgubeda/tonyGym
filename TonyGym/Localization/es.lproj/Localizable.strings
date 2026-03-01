@@ -4,8 +4,10 @@
 "nav.today" = "Hoy";
 "nav.dashboard" = "Dashboard";
 "nav.exercises" = "Ejercicios";
+"nav.my.exercises" = "Mis ejercicios";
 "nav.progress" = "Progreso";
 "nav.bilbo" = "BILBO";
+"nav.nutrition" = "Nutrición";
 
 /* Home Screen */
 "home.routine.title" = "Rutina";
@@ -403,6 +405,31 @@
 "workout.log.set" = "Serie";
 "workout.log.total.reps" = "Repeticiones totales";
 "workout.log.total.volume" = "Volumen total";
+
+/* Nutrition */
+"nutrition.calories" = "Calorías";
+"nutrition.protein" = "Proteínas";
+"nutrition.meals.today" = "Comidas del día";
+"nutrition.add.food" = "Añadir comida";
+"nutrition.no.meals" = "Aún no has registrado comidas";
+"nutrition.add.first" = "Añadir primera comida";
+"nutrition.trend.title" = "Tendencia";
+"nutrition.goals.title" = "Objetivos diarios";
+"nutrition.meal.breakfast" = "Desayuno";
+"nutrition.meal.lunch" = "Almuerzo";
+"nutrition.meal.dinner" = "Cena";
+"nutrition.meal.snack" = "Snack";
+"nutrition.add.title" = "Añadir comida";
+"nutrition.manual" = "Manual";
+"nutrition.scan" = "Escanear";
+"nutrition.search.placeholder" = "Buscar alimento...";
+"nutrition.name" = "Nombre";
+"nutrition.quantity" = "Cantidad (g)";
+"nutrition.add.to.favorites" = "Añadir a favoritos";
+"nutrition.meal.type" = "Tipo de comida";
+"nutrition.search.results" = "Resultados de búsqueda";
+"nutrition.scan.notfound" = "Producto no encontrado. Introduce los datos manualmente.";
+"nutrition.favorites" = "Favoritos";
 
 /* Rest Timer */
 "rest.timer.title" = "Descanso";
