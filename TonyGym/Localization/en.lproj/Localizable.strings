@@ -430,6 +430,13 @@
 "nutrition.search.results" = "Search results";
 "nutrition.scan.notfound" = "Product not found. Enter data manually.";
 "nutrition.favorites" = "Favorites";
+"nutrition.edit.title" = "Edit food";
+"nutrition.delete.food" = "Delete food";
+"nutrition.delete.confirm" = "Delete this food?";
+"nutrition.delete.confirm.message" = "This action cannot be undone.";
+"nutrition.nutrients" = "Nutrition values";
+"nutrition.carbs" = "Carbohydrates";
+"nutrition.fat" = "Fat";
 
 /* Rest Timer */
 "rest.timer.title" = "Rest";

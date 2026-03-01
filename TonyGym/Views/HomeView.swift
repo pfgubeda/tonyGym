@@ -32,6 +32,8 @@ struct HomeView: View {
     @State private var pendingWeightChange: (exercise: Exercise, weight: Double)?
     @State private var showingWelcomeDialog: Bool = false
     @State private var newRoutineName: String = ""
+    @State private var showingDashboard: Bool = false
+    @State private var showingExerciseList: Bool = false
     @Query private var exerciseMarks: [ExerciseMark]
 
     var body: some View {
@@ -45,6 +47,36 @@ struct HomeView: View {
             }
             .padding()
             .navigationTitle(NSLocalizedString("nav.today", comment: "Today tab title"))
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showingDashboard = true
+                    } label: {
+                        Image(systemName: "chart.bar.fill")
+                    }
+                    .accessibilityLabel(NSLocalizedString("nav.dashboard", comment: "Dashboard"))
+                }
+            }
+            .fullScreenCover(isPresented: $showingDashboard) {
+                NavigationStack {
+                    DashboardView()
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button(NSLocalizedString("common.close", comment: "Close")) { showingDashboard = false }
+                            }
+                        }
+                }
+            }
+            .fullScreenCover(isPresented: $showingExerciseList) {
+                NavigationStack {
+                    ExerciseListView()
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button(NSLocalizedString("common.close", comment: "Close")) { showingExerciseList = false }
+                            }
+                        }
+                }
+            }
             .onAppear(perform: selectDefaultRoutineIfNeeded)
             .fileImporter(isPresented: $showingImport, allowedContentTypes: [UTType.json]) { result in
                 handleImport(result: result)
@@ -106,8 +138,6 @@ struct HomeView: View {
                 .contentShape(Rectangle())
             }
 
-            Spacer()
-
             Menu {
                 Button(NSLocalizedString("home.routine.edit.name", comment: "Edit name")) {
                     routineNameDraft = selectedRoutine?.name ?? ""
@@ -122,6 +152,17 @@ struct HomeView: View {
                     .imageScale(.large)
             }
             .disabled(selectedRoutine == nil)
+
+            Spacer()
+
+            Button {
+                showingExerciseList = true
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "dumbbell")
+                    Text(NSLocalizedString("nav.my.exercises", comment: "My exercises"))
+                }
+            }
         }
     }
 
